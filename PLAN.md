@@ -87,7 +87,7 @@ For example, a nullable `nickname` of `null` exports as an empty field, while `"
 
 Status: ✅ done · ⏳ not started. Update markers as tasks complete.
 
-1. **Local generator workspace** — in progress (1.1–1.3 done in commit `05d037e`)
+1. **Local generator workspace** — in progress (1.1–1.3 done in commit `05d037e`, 1.4 done)
 
    1. ✅ Define the shared request, field, result, validation, and status types; add pure client-side request validation with the defined limits.
       - Acceptance: all invalid boundary values produce field-specific errors without a network request.
@@ -98,7 +98,7 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    3. ✅ Add field-row creation, editing, removal, unique-name checking, primitive type selection, nullable toggle, and guidance input.
       - Acceptance: users can build up to eight valid fields; a ninth is prevented; duplicate and invalid names cannot be submitted.
 
-   4. ⏳ Workspace fixes and submit flow.
+   4. ✅ Workspace fixes and submit flow.
       - Add Vitest (`npm test`) with unit tests for `validateGenerateRequest` boundaries.
       - Show validation issues only after a field is touched or a submit is attempted, and render the `fields` count issue.
       - Give each field row a stable client-side id (stripped from the request) for React keys and input ids.
@@ -130,6 +130,14 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Switch `generate()` to call `/api/generate` (keeping the mock behind a dev-only flag); configure the Vercel local-development command, environment workflow, Vercel Firewall rule, Groq project key and quota, and concise README instructions.
    - Acceptance: a live request through `vercel dev` returns 1–50 validated records using `openai/gpt-oss-120b`; preview and both exports match the response; rate-limit and provider errors produce safe, actionable UI states.
    - Checks: lint, build, tests, Groq structured-output smoke test, local Vercel-function test, and Vercel preview verification.
+
+## Post-MVP ideas
+
+Not part of the MVP; recorded so they are not lost.
+
+- **Choice field type** (a fixed list of allowed values): constrains output to specified values. Verify that Groq strict mode supports `enum` before committing to it.
+- **Date / date-time field type**: add a format check in our own output validation, since strict mode may not enforce `format`. Until then, use a `string` field with guidance such as "ISO 8601 date".
+- Email, UUID, and phone formats stay as field guidance, not types.
 
 ## Remaining decisions and prerequisites
 

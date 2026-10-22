@@ -6,7 +6,7 @@ Portfolio web app that uses an LLM to generate realistic mock data for developme
 
 ## Current State
 
-The generator workspace form is built (Milestone 1, tasks 1.1–1.3). Workspace fixes, the results panel with a local mock generator, exports, the server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
+The generator workspace form is built (Milestone 1, tasks 1.1–1.3). The results panel with a local mock generator, exports, the server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
 
 ## Stack
 
@@ -16,7 +16,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4. Groq is the provisional LLM prov
 
 - `src/App.tsx`, `src/main.tsx`: page composition and entry point
 - `src/features/generator/components/`: generator UI; `GeneratorWorkspace.tsx` owns the form state
-- `src/features/generator/field-utils.ts`: generator-specific helpers
+- `src/features/generator/field-utils.ts`: generator-specific helpers (field drafts with stable ids, request building, issue visibility)
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, and request validation
 - `src/index.css`: Tailwind import and theme tokens
 - `public/`: static assets
@@ -34,7 +34,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4. Groq is the provisional LLM prov
 
 ## Styling
 
-Use the semantic Tailwind tokens defined in `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, and so on) instead of raw palette colors. Light and dark palettes are defined as CSS variables under `:root[data-theme]`; `index.html` currently hard-codes `data-theme="dark"` (following the system color scheme is planned in task 1.4, without a toggle).
+Use the semantic Tailwind tokens defined in `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, and so on) instead of raw palette colors. Light is the default palette on `:root`, and the dark palette overrides it under `prefers-color-scheme: dark`; there is no theme toggle.
 
 ## Development and Checks
 
@@ -42,8 +42,9 @@ Use the semantic Tailwind tokens defined in `src/index.css` (`bg-app`, `text-con
 - `npm run build` runs the TypeScript build checks and creates the production bundle.
 - `npm run lint` runs ESLint.
 - `npm run preview` serves the built bundle locally.
+- `npm test` runs the unit tests once.
 
-There is no test runner or test script configured yet (Vitest and `npm test` are planned in task 1.4). TypeScript checks include unused locals and parameters; ESLint applies its recommended JavaScript, TypeScript, React Hooks, and React Refresh rules to `.ts` and `.tsx` files. No formatter is configured, so follow the surrounding code style. After each task, run lint and build and check the affected state in the browser.
+`npm test` runs Vitest (`vitest run`) over `*.test.ts` files; tests cover pure `.ts` modules, and there are no component tests. TypeScript checks include unused locals and parameters; ESLint applies its recommended JavaScript, TypeScript, React Hooks, and React Refresh rules to `.ts` and `.tsx` files. No formatter is configured, so follow the surrounding code style. After each task, run lint, build and tests and check the affected state in the browser.
 
 ## Git
 
