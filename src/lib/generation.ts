@@ -55,7 +55,7 @@ export type GenerateResponse = GenerateSuccess | GenerationError;
 export type GenerationState =
   | { status: 'idle' }
   | { status: 'loading' }
-  | { status: 'success'; result: GenerateSuccess }
+  | { status: 'success'; result: GenerateSuccess; columns: string[] }
   | { status: 'error'; error: GenerationError['error'] };
 
 export type GenerationStatus = GenerationState['status'];

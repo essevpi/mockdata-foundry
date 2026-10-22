@@ -1,29 +1,16 @@
 import { useEffect, useRef } from 'react';
-import type { GenerationState, PrimitiveValue } from '../../../lib/generation';
-import { formatCellValue } from '../result-utils';
+import type { GenerationState } from '../../../lib/generation';
+import { ExportActions } from './ExportActions';
+import { ResultsTable } from './ResultsTable';
 
 type ResultsPanelProps = {
   state: GenerationState;
 };
 
-const cellClassNames = {
-  boolean: 'font-mono text-xs',
-  empty: 'font-mono text-xs text-content-muted',
-  null: 'rounded bg-surface-raised px-1.5 py-0.5 font-mono text-xs italic text-content-muted',
-  number: 'font-mono text-xs tabular-nums',
-  text: '',
-} as const;
-
 function formatRetryDelay(seconds: number) {
   const minutes = Math.ceil(seconds / 60);
 
   return minutes <= 1 ? 'about a minute' : `about ${minutes} minutes`;
-}
-
-function ResultCell({ value }: { value: PrimitiveValue }) {
-  const { kind, text } = formatCellValue(value);
-
-  return <span className={cellClassNames[kind]}>{text}</span>;
 }
 
 function ResultsPanel({ state }: ResultsPanelProps) {
@@ -84,58 +71,17 @@ function ResultsPanel({ state }: ResultsPanelProps) {
         </div>
       )}
 
-      {state.status === 'success' && <ResultsTable records={state.result.records} />}
+      {state.status === 'success' && (
+        <div className="mt-4 space-y-5">
+          <p className="text-sm text-content-muted" role="status">
+            {state.result.records.length} {state.result.records.length === 1 ? 'record' : 'records'}{' '}
+            generated.
+          </p>
+          <ExportActions columns={state.columns} records={state.result.records} />
+          <ResultsTable columns={state.columns} records={state.result.records} />
+        </div>
+      )}
     </section>
-  );
-}
-
-function ResultsTable({ records }: { records: Array<Record<string, PrimitiveValue>> }) {
-  const columns = Object.keys(records[0] ?? {});
-
-  return (
-    <div className="mt-4">
-      <p className="text-sm text-content-muted" role="status">
-        {records.length} {records.length === 1 ? 'record' : 'records'} generated.
-      </p>
-      <div className="mt-3 overflow-x-auto rounded-xl border border-border">
-        <table className="w-full min-w-max border-collapse text-left text-sm text-content">
-          <caption className="sr-only">Generated records</caption>
-          <thead className="bg-surface-raised text-xs uppercase tracking-wide text-content-muted">
-            <tr>
-              <th scope="col" className="px-3 py-2 text-right font-medium">
-                #
-              </th>
-              {columns.map((column) => (
-                <th key={column} scope="col" className="px-3 py-2 font-medium normal-case">
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {records.map((record, rowIndex) => (
-              <tr key={rowIndex}>
-                <th
-                  scope="row"
-                  className="px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted"
-                >
-                  {rowIndex + 1}
-                </th>
-                {columns.map((column) => (
-                  <td key={column} className="px-3 py-2">
-                    <ResultCell value={record[column]} />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-3 text-xs text-content-muted">
-        <span className="font-mono">null</span> marks a missing value; <span className="font-mono">""</span>{' '}
-        is an empty string.
-      </p>
-    </div>
   );
 }
 

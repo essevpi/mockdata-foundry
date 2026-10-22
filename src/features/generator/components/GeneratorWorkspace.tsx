@@ -81,15 +81,21 @@ function GeneratorWorkspace() {
       return;
     }
 
+    const request = requestValidation.data;
+
     setGeneration({ status: 'loading' });
 
     try {
-      const response = await generate(requestValidation.data, { mockOutcome });
+      const response = await generate(request, { mockOutcome });
 
       setGeneration(
         'error' in response
           ? { status: 'error', error: response.error }
-          : { status: 'success', result: response },
+          : {
+              status: 'success',
+              result: response,
+              columns: request.fields.map((field) => field.name),
+            },
       );
     } catch {
       setGeneration({

@@ -41,6 +41,17 @@ describe('createMockSuccess', () => {
     expect(records.some((record) => record.name === '')).toBe(true);
   });
 
+  it('includes text with a quote, a comma, and a line break for export checks', () => {
+    const awkwardNames = records
+      .map((record) => record.name)
+      .filter(
+        (value): value is string =>
+          typeof value === 'string' && value.includes('"') && value.includes(',') && value.includes('\n'),
+      );
+
+    expect(awkwardNames).toEqual(['He said "hi", then\nleft']);
+  });
+
   it('keeps strings within the returned-string limit', () => {
     const longName = { name: 'a'.repeat(40), type: 'string' as const, nullable: false };
     const [first] = createMockSuccess({ ...request, count: 1, fields: [longName] }).records;

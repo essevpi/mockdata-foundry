@@ -43,8 +43,12 @@ const MOCK_ERRORS: Record<GenerationErrorCode, GenerationError['error']> = {
   },
 };
 
+// Contains a quote, a comma, and a line break so export escaping can be checked by eye.
+const AWKWARD_TEXT = 'He said "hi", then\nleft';
+
 // Deterministic placeholder values. Nullable fields are null on some rows and string
-// fields are empty on others, so both cases are visible in the results table.
+// fields are empty on others, so both cases are visible in the results table. Every seventh
+// row holds the awkward text above.
 function createMockValue(field: FieldDefinition, rowIndex: number, fieldIndex: number): PrimitiveValue {
   if (field.nullable && (rowIndex + fieldIndex) % 3 === 2) {
     return null;
@@ -52,6 +56,10 @@ function createMockValue(field: FieldDefinition, rowIndex: number, fieldIndex: n
 
   switch (field.type) {
     case 'string':
+      if (rowIndex % 7 === 6) {
+        return AWKWARD_TEXT;
+      }
+
       return rowIndex % 5 === 4 ? '' : `${field.name} ${rowIndex + 1}`;
     case 'number':
       return Math.round(((rowIndex + 1) * 1.5 + fieldIndex * 0.25) * 100) / 100;

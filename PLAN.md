@@ -116,8 +116,9 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
 
    - Checks for each task: `npm run lint`, `npm run build`, `npm test` once added, and a focused browser check of the affected state.
 
-2. **Exports** — ⏳ not started
+2. **Exports** — ✅ done
    - Add pure `toJson` and `toCsv` functions in `src/lib/export.ts` with unit tests, and the JSON/CSV download actions with the documented null convention and formula note.
+   - Decisions: JSON is a pretty-printed array of records (no envelope); CSV has no BOM, a header row of field names, and CRLF row endings per RFC 4180; both files use the submitted field order, which the success state keeps as `columns`; downloads are named `mockdata-records.json` and `mockdata-records.csv`. The dev mock includes a text value with a quote, a comma, and a line break so escaping can be checked in a real download.
    - Acceptance: exported JSON preserves null; CSV distinguishes null from empty strings and escapes commas, quotes, and line breaks.
    - Checks: lint, build, tests, and manual inspection of downloaded files.
 

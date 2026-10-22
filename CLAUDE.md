@@ -6,7 +6,7 @@ Portfolio web app that uses an LLM to generate realistic mock data for developme
 
 ## Current State
 
-Milestone 1 (local generator workspace) is complete: the form, field builder, results panel, and a local mock generator. Exports, the server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
+Milestones 1 and 2 are complete: the form, field builder, results panel, a local mock generator, and JSON/CSV downloads. The server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
 
 ## Stack
 
@@ -15,13 +15,14 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4. Groq is the provisional LLM prov
 ## Project Layout
 
 - `src/App.tsx`, `src/main.tsx`: page composition and entry point
-- `src/features/generator/components/`: generator UI; `GeneratorWorkspace.tsx` owns the form and generation state; `ResultsPanel.tsx` renders the idle/loading/error/success states and results table; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes
+- `src/features/generator/components/`: generator UI; `GeneratorWorkspace.tsx` owns the form and generation state; `ResultsPanel.tsx` renders the idle/loading/error/success states, with `ResultsTable.tsx` and `ExportActions.tsx` for the success state; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes
 - `src/features/generator/field-utils.ts`: generator-specific helpers (field drafts with stable ids, request building, issue visibility)
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, and request validation
 - `src/lib/generate.ts`: the single `generate(request)` entry point (currently backed by `src/lib/mock-generator.ts`)
+- `src/lib/export.ts` and `src/lib/download.ts`: pure JSON/CSV serialization (see `PLAN.md` for the CSV null convention) and the browser download helper
 - `src/index.css`: Tailwind import and theme tokens
 - `public/`: static assets
-- Planned, not yet present: `src/lib/export.ts` (JSON/CSV), `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
+- Planned, not yet present: `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
 
 ## Code Organization
 
@@ -48,8 +49,6 @@ Use the semantic Tailwind tokens defined in `src/index.css` (`bg-app`, `text-con
 `npm test` runs Vitest (`vitest run`) over `*.test.ts` files; tests cover pure `.ts` modules, and there are no component tests. TypeScript checks include unused locals and parameters; ESLint applies its recommended JavaScript, TypeScript, React Hooks, and React Refresh rules to `.ts` and `.tsx` files. No formatter is configured, so follow the surrounding code style. After each task, run lint, build and tests and check the affected state in the browser.
 
 ## Git
-
-Do not add `Co-Authored-By` or other attribution lines to commit messages or pull request descriptions. Write a subject line and an optional body only.
 
 Make one commit per completed task or logical change. Fold small follow-ups (docs edits, label tweaks, review fixes) into the commit they belong to instead of committing them separately.
 
