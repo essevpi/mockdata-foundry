@@ -33,10 +33,6 @@ export type PrimitiveValue = string | number | boolean | null;
 
 export type GenerateSuccess = {
   records: Array<Record<string, PrimitiveValue>>;
-  validation: {
-    valid: true;
-    recordCount: number;
-  };
 };
 
 export type GenerationErrorCode =
@@ -56,7 +52,13 @@ export type GenerationError = {
 
 export type GenerateResponse = GenerateSuccess | GenerationError;
 
-export type GenerationStatus = 'idle' | 'loading' | 'success' | 'error';
+export type GenerationState =
+  | { status: 'idle' }
+  | { status: 'loading' }
+  | { status: 'success'; result: GenerateSuccess }
+  | { status: 'error'; error: GenerationError['error'] };
+
+export type GenerationStatus = GenerationState['status'];
 
 export type ValidationIssue = {
   field: string;

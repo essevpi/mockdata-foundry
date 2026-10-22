@@ -42,7 +42,7 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
     <fieldset className="rounded-xl border border-border bg-surface-inset/50 p-4">
       <legend className="sr-only">Field {index + 1}</legend>
 
-      <div className="grid gap-x-4 gap-y-4 md:grid-cols-[minmax(0,1fr)_minmax(0,10rem)_minmax(0,1.5fr)]">
+      <div className="grid gap-x-4 gap-y-4 md:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_minmax(0,1.5fr)]">
         <div>
           <label htmlFor={nameInputId} className="block text-xs font-medium text-content">
             <span aria-hidden="true" className="mr-1.5 text-content-muted">

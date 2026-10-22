@@ -6,7 +6,7 @@ Portfolio web app that uses an LLM to generate realistic mock data for developme
 
 ## Current State
 
-The generator workspace form is built (Milestone 1, tasks 1.1–1.3). The results panel with a local mock generator, exports, the server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
+Milestone 1 (local generator workspace) is complete: the form, field builder, results panel, and a local mock generator. Exports, the server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
 
 ## Stack
 
@@ -15,12 +15,13 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4. Groq is the provisional LLM prov
 ## Project Layout
 
 - `src/App.tsx`, `src/main.tsx`: page composition and entry point
-- `src/features/generator/components/`: generator UI; `GeneratorWorkspace.tsx` owns the form state
+- `src/features/generator/components/`: generator UI; `GeneratorWorkspace.tsx` owns the form and generation state; `ResultsPanel.tsx` renders the idle/loading/error/success states and results table; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes
 - `src/features/generator/field-utils.ts`: generator-specific helpers (field drafts with stable ids, request building, issue visibility)
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, and request validation
+- `src/lib/generate.ts`: the single `generate(request)` entry point (currently backed by `src/lib/mock-generator.ts`)
 - `src/index.css`: Tailwind import and theme tokens
 - `public/`: static assets
-- Planned, not yet present: `ResultsPanel`, a local mock `generate()` (also the dev-mode generator), `src/lib/export.ts` (JSON/CSV), `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
+- Planned, not yet present: `src/lib/export.ts` (JSON/CSV), `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
 
 ## Code Organization
 

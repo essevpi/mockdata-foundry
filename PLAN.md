@@ -87,7 +87,7 @@ For example, a nullable `nickname` of `null` exports as an empty field, while `"
 
 Status: ✅ done · ⏳ not started. Update markers as tasks complete.
 
-1. **Local generator workspace** — in progress (1.1–1.3 done in commit `05d037e`, 1.4 done)
+1. **Local generator workspace** — ✅ done
 
    1. ✅ Define the shared request, field, result, validation, and status types; add pure client-side request validation with the defined limits.
       - Acceptance: all invalid boundary values produce field-specific errors without a network request.
@@ -108,7 +108,7 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
       - Enable Generate when the request is valid.
       - Acceptance: a fresh page load shows no errors; removing a middle field keeps focus and values on the right rows; a valid form enables Generate.
 
-   5. ⏳ Results panel with typed state and a local mock generator.
+   5. ✅ Results panel with typed state and a local mock generator.
       - Add `GenerationStatus` state in `GeneratorWorkspace` and a `ResultsPanel` with idle, loading, success, and error states, disabling duplicate submission while loading.
       - Render a real results table showing null as `null` and empty strings as `""`.
       - Implement `generate(request): Promise<GenerateResponse>` as a local mock (deterministic values per type, nulls for nullable fields, simulated delay, a dev switch to force each error code). Keep it as the dev-mode generator after the API is connected.
