@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   buildGenerateRequest,
   ADD_FIELD_BUTTON_ID,
+  canStepRecordCount,
   createFieldDraft,
   getFieldInputId,
   getFocusTargetIdAfterRemoval,
   getNextFieldName,
   getVisibleIssues,
+  stepRecordCount,
   type FieldDraft,
   type TouchedSection,
 } from './field-utils';
@@ -84,5 +86,44 @@ describe('getFocusTargetIdAfterRemoval', () => {
     expect(getFocusTargetIdAfterRemoval(fields, 0)).toBe(getFieldInputId('b', 'name'));
     expect(getFocusTargetIdAfterRemoval(fields, 2)).toBe(getFieldInputId('b', 'name'));
     expect(getFocusTargetIdAfterRemoval(fields.slice(0, 1), 0)).toBe(ADD_FIELD_BUTTON_ID);
+  });
+});
+
+describe('stepRecordCount', () => {
+  it('adds or subtracts one', () => {
+    expect(stepRecordCount('10', 1)).toBe('11');
+    expect(stepRecordCount('10', -1)).toBe('9');
+  });
+
+  it('clamps to the request limits', () => {
+    expect(stepRecordCount('50', 1)).toBe('50');
+    expect(stepRecordCount('1', -1)).toBe('1');
+    expect(stepRecordCount('200', -1)).toBe('50');
+    expect(stepRecordCount('-5', 1)).toBe('1');
+  });
+
+  it('steps empty or invalid text to the minimum', () => {
+    expect(stepRecordCount('', 1)).toBe('1');
+    expect(stepRecordCount('', -1)).toBe('1');
+    expect(stepRecordCount('abc', 1)).toBe('1');
+  });
+
+  it('steps fractional values to the next whole number', () => {
+    expect(stepRecordCount('2.5', 1)).toBe('3');
+    expect(stepRecordCount('2.5', -1)).toBe('2');
+  });
+});
+
+describe('canStepRecordCount', () => {
+  it('is false only at the limits', () => {
+    expect(canStepRecordCount('1', -1)).toBe(false);
+    expect(canStepRecordCount('1', 1)).toBe(true);
+    expect(canStepRecordCount('50', 1)).toBe(false);
+    expect(canStepRecordCount('50', -1)).toBe(true);
+  });
+
+  it('allows stepping from empty or invalid text', () => {
+    expect(canStepRecordCount('', 1)).toBe(true);
+    expect(canStepRecordCount('abc', -1)).toBe(true);
   });
 });

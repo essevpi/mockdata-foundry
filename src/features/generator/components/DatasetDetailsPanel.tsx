@@ -1,4 +1,8 @@
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
+import { canStepRecordCount, stepRecordCount } from '../field-utils';
+
+const stepperButtonClassName =
+  'grid size-10.5 place-items-center rounded-lg text-lg text-content transition hover:text-action aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:text-content-muted/50';
 
 type DatasetDetailsPanelProps = {
   countIssues: ValidationIssue[];
@@ -60,25 +64,54 @@ function DatasetDetailsPanel({
         ))}
       </div>
 
-      <div className="mt-8 border-t border-border pt-7">
-        <label htmlFor="record-count" className="text-sm font-medium text-content">
-          Number of records
-        </label>
-        <p className="mt-1 text-sm text-content-muted">Choose a small, useful sample for now.</p>
-        <input
-          id="record-count"
-          max={REQUEST_LIMITS.recordsMaxCount}
-          min={REQUEST_LIMITS.recordsMinCount}
-          name="record-count"
-          type="number"
-          value={recordCount}
-          onBlur={onCountBlur}
-          onChange={(event) => onRecordCountChange(event.target.value)}
-          className="mt-3 block w-full rounded-xl border border-border-strong bg-input px-4 py-3 text-base font-medium text-content outline-none focus:border-focus focus:ring-4 focus:ring-focus/30 sm:max-w-40"
-        />
-        <p className="mt-2 text-xs text-content-muted">
-          {REQUEST_LIMITS.recordsMinCount}–{REQUEST_LIMITS.recordsMaxCount} records per generation
-        </p>
+      <div className="mt-6 border-t border-border pt-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div>
+            <label htmlFor="record-count" className="text-sm font-medium text-content">
+              Number of records
+            </label>
+            <p id="record-count-hint" className="mt-0.5 text-xs text-content-muted">
+              {REQUEST_LIMITS.recordsMinCount}–{REQUEST_LIMITS.recordsMaxCount} records per
+              generation
+            </p>
+          </div>
+          <div
+            className="flex items-center rounded-xl border border-border-strong bg-input focus-within:border-focus focus-within:ring-4 focus-within:ring-focus/30"
+            role="group"
+            aria-label="Record count"
+          >
+            <button
+              aria-label="Decrease record count"
+              className={stepperButtonClassName}
+              aria-disabled={!canStepRecordCount(recordCount, -1)}
+              onClick={() => onRecordCountChange(stepRecordCount(recordCount, -1))}
+              type="button"
+            >
+              <span aria-hidden="true">−</span>
+            </button>
+            <input
+              id="record-count"
+              aria-describedby="record-count-hint"
+              max={REQUEST_LIMITS.recordsMaxCount}
+              min={REQUEST_LIMITS.recordsMinCount}
+              name="record-count"
+              type="number"
+              value={recordCount}
+              onBlur={onCountBlur}
+              onChange={(event) => onRecordCountChange(event.target.value)}
+              className="h-10.5 w-16 border-x border-border bg-transparent px-1 text-center text-base font-medium tabular-nums text-content outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <button
+              aria-label="Increase record count"
+              className={stepperButtonClassName}
+              aria-disabled={!canStepRecordCount(recordCount, 1)}
+              onClick={() => onRecordCountChange(stepRecordCount(recordCount, 1))}
+              type="button"
+            >
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+        </div>
         {countIssues.map((issue) => (
           <p key={issue.message} className="mt-2 text-xs text-danger">
             {issue.message}

@@ -1,7 +1,8 @@
-import type {
-  FieldDefinition,
-  GenerateRequest,
-  ValidationIssue,
+import {
+  REQUEST_LIMITS,
+  type FieldDefinition,
+  type GenerateRequest,
+  type ValidationIssue,
 } from '../../lib/generation';
 
 export type FieldDraft = FieldDefinition & { id: string };
@@ -65,6 +66,25 @@ export function buildGenerateRequest(
       ...(guidance ? { guidance } : {}),
     })),
   };
+}
+
+// Steps the record count text by one, clamped to the request limits. Empty or invalid text
+// steps to the minimum; a fractional value steps to the next whole number in that direction.
+export function stepRecordCount(recordCount: string, delta: 1 | -1): string {
+  const value = Number(recordCount);
+  const { recordsMaxCount, recordsMinCount } = REQUEST_LIMITS;
+
+  if (recordCount.trim() === '' || !Number.isFinite(value)) {
+    return String(recordsMinCount);
+  }
+
+  const stepped = delta > 0 ? Math.floor(value) + 1 : Math.ceil(value) - 1;
+
+  return String(Math.min(recordsMaxCount, Math.max(recordsMinCount, stepped)));
+}
+
+export function canStepRecordCount(recordCount: string, delta: 1 | -1): boolean {
+  return Number(stepRecordCount(recordCount, delta)) !== Number(recordCount);
 }
 
 export function getVisibleIssues(
