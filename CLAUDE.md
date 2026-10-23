@@ -8,7 +8,7 @@ When a change affects the commands, project layout, conventions or dependency ru
 
 ## Stack
 
-React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. Neither is integrated yet: treat both as plans until the server function and integrations are added (progress in `PLAN.md`).
+React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Approved UI libraries, to be installed only when a task uses them: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. Neither is integrated yet: treat both as plans until the server function and integrations are added (progress in `PLAN.md`).
 
 ## Project Layout
 
@@ -28,7 +28,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Groq is the provisional 
 
 ## Styling
 
-Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, etc.), never raw palette colors. Dark is the default palette on `:root`; the light palette applies under `:root[data-theme="light"]`. Theme does not follow `prefers-color-scheme`. A light/dark toggle is planned; don't add one until its task begins. Use `border-border-strong` for form-control boundaries (`border-border` is for decorative dividers). A global `focus-visible` outline in `src/index.css` covers buttons, selects and checkboxes; text inputs keep their ring. New UI must work in both palettes. Until the toggle exists, preview light by running `document.documentElement.dataset.theme = 'light'` in the browser console. When changing palette values, keep text at 4.5:1 or more and control borders (`border-strong`) and focus at 3:1 or more against the surfaces they sit on, in both palettes.
+Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, etc.), never raw palette colors. Dark is the default palette on `:root`; the light palette applies under `:root[data-theme="light"]`. Theme does not follow `prefers-color-scheme`. A light/dark toggle is planned; don't add one until its task begins. Use `border-border-strong` for form-control boundaries (`border-border` is for decorative dividers). A global `focus-visible` outline in `src/index.css` covers buttons, selects and checkboxes; text inputs keep their ring. New UI must work in both palettes. Until the toggle exists, preview light by running `document.documentElement.dataset.theme = 'light'` in the browser console. When changing palette values, keep text at 4.5:1 or more and control borders (`border-strong`) and focus at 3:1 or more against the surfaces they sit on, in both palettes. Use `lucide-react` for icons and Motion for animations; keep animations subtle and purposeful, and respect reduced-motion preferences.
 
 ## Commands
 
@@ -56,4 +56,4 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 - Keep LLM provider credentials server-side; never expose secrets in browser code or commit them.
 - Before implementing a provider integration, check the current provider documentation for API behavior, authentication and supported models.
 - Treat LLM output as untrusted: validate provider responses against the contract in `PLAN.md` with hand-written checks before they reach the UI.
-- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The Vercel CLI is the only new development dependency proposed; add it only when its task begins.
+- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). Approved additions: `lucide-react` and `motion` (UI) and the Vercel CLI (development); add each only when a task needs it. No other new dependencies.

@@ -19,16 +19,16 @@ Display null cells as `null` and empty strings as `""` in the preview so users c
 
 Validate these limits on both client and server; server validation is authoritative:
 
-| Input | Limit |
-|---|---:|
-| Records | 1–50 |
-| Fields | 1–8 |
-| Dataset description | 1–1,000 characters |
-| Field guidance | 0–160 characters per field |
-| Field name | 1–40 ASCII identifier characters |
-| JSON request body | 8 KiB |
-| Returned string value | 64 characters per value |
-| Provider completion | 6,000 tokens maximum, subject to current model support |
+| Input                 |                                                  Limit |
+| --------------------- | -----------------------------------------------------: |
+| Records               |                                                   1–50 |
+| Fields                |                                                    1–8 |
+| Dataset description   |                                     1–1,000 characters |
+| Field guidance        |                             0–160 characters per field |
+| Field name            |                       1–40 ASCII identifier characters |
+| JSON request body     |                                                  8 KiB |
+| Returned string value |                                64 characters per value |
+| Provider completion   | 6,000 tokens maximum, subject to current model support |
 
 Use these types:
 
@@ -73,6 +73,7 @@ For example, a nullable `nickname` of `null` exports as an empty field, while `"
 - Keep form state, client validation, preview, and browser exports in `src/`.
 - Add a root-level `api/generate.ts` Vercel Function. It validates the request, reads `GROQ_API_KEY` only from server-side environment variables, invokes Groq, validates output, and returns either `GenerateSuccess` or a sanitized error envelope.
 - Use platform `fetch` and focused hand-written runtime validation for the constrained field model. Do not add an LLM SDK, database, or schema-validation library.
+- UI libraries: use `lucide-react` for icons and `motion` (imported from `motion/react`) for animations. Install each only when a task uses it. Keep animations subtle and purposeful, and respect reduced-motion preferences.
 - Configure the application model as the server-side constant `openai/gpt-oss-120b`. This is the application's runtime model and is unrelated to the coding assistant used for development.
 - Groq’s current documentation lists `openai/gpt-oss-120b` as supporting strict JSON Schema structured outputs. Confirm the model is active for the target account, repeat the smoke test using the final nullable schema, and inspect account-specific quotas before implementation. [Structured Outputs](https://console.groq.com/docs/structured-outputs), [models](https://console.groq.com/docs/models), [rate limits](https://console.groq.com/docs/rate-limits)
 - Set `reasoning_effort: "low"` and `include_reasoning: false` on the Groq request (supported by `openai/gpt-oss-120b` per Groq's reasoning docs). Groq's docs do not say whether reasoning tokens count toward `max_completion_tokens`, and strict mode does not document `maxLength`, `minItems`, or `maxItems`; the exact record count and 64-character string cap are therefore enforced only by our own output validation. Measure token usage and the violation rate in the smoke test before deciding whether retries are needed (retries remain deferred until then).
@@ -88,7 +89,6 @@ For example, a nullable `nickname` of `null` exports as an empty field, while `"
 Status: ✅ done · ⏳ not started. Update markers as tasks complete.
 
 1. **Local generator workspace** — ✅ done
-
    1. ✅ Define the shared request, field, result, validation, and status types; add pure client-side request validation with the defined limits.
       - Acceptance: all invalid boundary values produce field-specific errors without a network request.
 
@@ -113,7 +113,6 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
       - Render a real results table showing null as `null` and empty strings as `""`.
       - Implement `generate(request): Promise<GenerateResponse>` as a local mock (deterministic values per type, nulls for nullable fields, simulated delay, a dev switch to force each error code). Keep it as the dev-mode generator after the API is connected.
       - Acceptance: each state is reachable with `npm run dev` alone and preserves form values after an error; nullable and non-nullable primitive values are visually distinguishable.
-
    - Checks for each task: `npm run lint`, `npm run build`, `npm test` once added, and a focused browser check of the affected state.
 
 2. **Exports** — ✅ done
@@ -150,5 +149,5 @@ Not part of the MVP; recorded so they are not lost.
 
 - Confirm the target Groq account can apply the proposed 100-request/day project cap and supports the required output-token budget on its current tier.
 - Confirm Vercel Firewall rate limiting is available and acceptable for the target Vercel plan before exposing the endpoint publicly.
-- Approve the Vercel CLI (to run and test the root-level Vercel Function locally) and Vitest (to test the pure validation, export, and schema logic) as the only new development dependencies.
+- Approve the Vercel CLI (to run and test the root-level Vercel Function locally) as the only new development dependency still to be added; Vitest is already installed. `lucide-react` and `motion` are the approved runtime UI dependencies, added only when a task uses them.
 - After the Milestone 3 smoke test, revisit whether the 8-field limit and the 2-requests-per-10-minutes firewall rule suit a portfolio demo; neither is changed yet.
