@@ -18,7 +18,7 @@ function GenerateBar({
   onMockOutcomeChange,
 }: GenerateBarProps) {
   return (
-    <div className="sticky bottom-0 order-last border-t border-border-strong bg-surface px-4 py-3 sm:px-6 lg:static lg:order-none lg:py-4">
+    <div className="sticky bottom-0 z-30 order-last border-t border-border-strong bg-surface px-4 py-3 sm:px-6 lg:static lg:order-none lg:py-4">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <button
           className="w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-action-foreground transition hover:bg-action-hover disabled:cursor-not-allowed disabled:border disabled:border-border disabled:bg-surface-raised disabled:text-content-muted sm:w-auto sm:px-8"

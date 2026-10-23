@@ -1,8 +1,11 @@
 import { TriangleAlert } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GenerationState } from '../../../lib/generation';
+import { getResultsTabId, RESULTS_VIEW_PANEL_ID, type ResultsView } from '../result-utils';
 import { ExportActions } from './ExportActions';
+import { JsonEditorView } from './JsonEditorView';
 import { ResultsTable } from './ResultsTable';
+import { ResultsViewToggle } from './ResultsViewToggle';
 
 type ResultsPanelProps = {
   state: GenerationState;
@@ -18,6 +21,8 @@ function formatRetryDelay(seconds: number) {
 
 function ResultsPanel({ state }: ResultsPanelProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  // Kept here, so the choice survives regenerating and errors until the page reloads.
+  const [view, setView] = useState<ResultsView>('table');
 
   useEffect(() => {
     if (state.status === 'loading') {
@@ -36,7 +41,8 @@ function ResultsPanel({ state }: ResultsPanelProps) {
         <h2 id="results-heading" className="text-lg font-semibold text-content">
           Results
         </h2>
-        {/* The Table/Editor toggle goes here on success; the row keeps its height in every state. */}
+        {/* The toggle shows on success only; the row keeps its height in every state. */}
+        {state.status === 'success' && <ResultsViewToggle view={view} onChange={setView} />}
       </div>
 
       {state.status === 'idle' && (
@@ -97,7 +103,18 @@ function ResultsPanel({ state }: ResultsPanelProps) {
             generated.
           </p>
           <ExportActions columns={state.columns} records={state.result.records} />
-          <ResultsTable columns={state.columns} records={state.result.records} />
+          <div
+            aria-labelledby={getResultsTabId(view)}
+            className="flex min-h-0 flex-col lg:flex-1"
+            id={RESULTS_VIEW_PANEL_ID}
+            role="tabpanel"
+          >
+            {view === 'table' ? (
+              <ResultsTable columns={state.columns} records={state.result.records} />
+            ) : (
+              <JsonEditorView columns={state.columns} records={state.result.records} />
+            )}
+          </div>
         </div>
       )}
     </section>
