@@ -1,3 +1,4 @@
+import { ThemeToggle } from './features/theme/ThemeToggle';
 import { GeneratorWorkspace } from './features/generator/components/GeneratorWorkspace';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
             </p>
           </div>
         </div>
+        <ThemeToggle />
       </header>
 
       <main className="flex min-w-0 flex-1 flex-col lg:min-h-0">

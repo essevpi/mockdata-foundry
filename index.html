@@ -6,6 +6,14 @@
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MockData Foundry</title>
+  <script>
+    // Apply the saved theme before first paint to avoid a flash. Key matches THEME_STORAGE_KEY.
+    try {
+      if (localStorage.getItem('mockdata-theme') === 'light') {
+        document.documentElement.dataset.theme = 'light';
+      }
+    } catch (error) { /* storage unavailable: keep the dark default */ }
+  </script>
 </head>
 
 <body>

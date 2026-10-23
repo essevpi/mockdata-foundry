@@ -18,6 +18,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Approved UI libraries, t
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation
 - `src/lib/generate.ts`: the single `generate(request)` entry point, currently backed by `src/lib/mock-generator.ts`. UI code calls only `generate()`; swapping the mock for the real provider happens behind it.
 - `src/lib/export.ts`, `src/lib/download.ts`: pure JSON/CSV serialization (CSV null convention in `PLAN.md`) and the browser download helper
+- `src/features/theme/`: `ThemeToggle.tsx` and pure `theme-utils.ts` (stored-theme parsing)
 - `src/index.css`: Tailwind import and theme tokens
 - Planned, not yet present: `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
 
@@ -28,7 +29,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Approved UI libraries, t
 
 ## Styling
 
-Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, etc.), never raw palette colors. Dark is the default palette on `:root`; the light palette applies under `:root[data-theme="light"]`. Theme does not follow `prefers-color-scheme`. A light/dark toggle is planned; don't add one until its task begins. Use `border-border-strong` for form-control boundaries (`border-border` is for decorative dividers). A global `focus-visible` outline in `src/index.css` covers buttons, selects and checkboxes; text inputs keep their ring. New UI must work in both palettes. Until the toggle exists, preview light by running `document.documentElement.dataset.theme = 'light'` in the browser console. When changing palette values, keep text at 4.5:1 or more and control borders (`border-strong`) and focus at 3:1 or more against the surfaces they sit on, in both palettes. Use `lucide-react` for icons and Motion for animations; keep animations subtle and purposeful, and respect reduced-motion preferences.
+Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, etc.), never raw palette colors. Dark is the default palette on `:root`; the light palette applies under `:root[data-theme="light"]`. Theme does not follow `prefers-color-scheme`. The header toggle (`src/features/theme/`) sets `data-theme` and stores the choice in `localStorage`; an inline script in `index.html` applies it before first paint. Use `border-border-strong` for form-control boundaries (`border-border` is for decorative dividers). A global `focus-visible` outline in `src/index.css` covers buttons, selects and checkboxes; text inputs keep their ring. New UI must work in both palettes. When changing palette values, keep text at 4.5:1 or more and control borders (`border-strong`) and focus at 3:1 or more against the surfaces they sit on, in both palettes. Use `lucide-react` for icons and Motion for animations; keep animations subtle and purposeful, and respect reduced-motion preferences.
 
 ## Commands
 

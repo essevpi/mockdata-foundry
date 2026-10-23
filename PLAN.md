@@ -125,7 +125,7 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Styling only: graphite and molten-gold palette with a steel-blue focus colour and a new `border-strong` token for control boundaries; solid panel surfaces; a global `focus-visible` outline; system font stack. No behaviour, props, state or layout changes.
    - Dark is the default palette on `:root`. Light applies only under `:root[data-theme="light"]`; the theme no longer follows `prefers-color-scheme`.
    - Acceptance: every ResultsPanel state, the form and the field builder read well in both palettes; text meets 4.5:1 and control boundaries and focus 3:1 against adjacent surfaces.
-   - Follow-up, ⏳ not started: a light/dark toggle that sets `data-theme` on `<html>` (and remembers the choice).
+   - Follow-up, ✅ done in 2b: a light/dark toggle that sets `data-theme` on `<html>` and remembers the choice in `localStorage`; an inline script in `index.html` applies it before first paint.
 
 2b. **Layout refresh (split workbench)** — ⏳ not started
    - Two-pane workbench: request (description, records, fields, Generate) beside results at lg and above, each pane scrolling within a viewport-height page; stacked below lg with a sticky Generate bar. The header holds the theme toggle (2a follow-up).
