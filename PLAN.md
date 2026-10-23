@@ -104,7 +104,7 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
       - Give each field row a stable client-side id (stripped from the request) for React keys and input ids.
       - Read limits and type options from `REQUEST_LIMITS` and `FIELD_TYPES` instead of hard-coding them in components.
       - Move the field builder into the main column with compact rows, leaving the full width below for results.
-      - Follow the system color scheme (`prefers-color-scheme`) using the existing light and dark palettes; no toggle.
+      - Follow the system color scheme (`prefers-color-scheme`) using the existing light and dark palettes; no toggle. (Superseded by the Foundry visual refresh below: dark is now the default and light is opt-in via `data-theme`.)
       - Enable Generate when the request is valid.
       - Acceptance: a fresh page load shows no errors; removing a middle field keeps focus and values on the right rows; a valid form enables Generate.
 
@@ -121,6 +121,12 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Decisions: JSON is a pretty-printed array of records (no envelope); CSV has no BOM, a header row of field names, and CRLF row endings per RFC 4180; both files use the submitted field order, which the success state keeps as `columns`; downloads are named `mockdata-records.json` and `mockdata-records.csv`. The dev mock includes a text value with a quote, a comma, and a line break so escaping can be checked in a real download.
    - Acceptance: exported JSON preserves null; CSV distinguishes null from empty strings and escapes commas, quotes, and line breaks.
    - Checks: lint, build, tests, and manual inspection of downloaded files.
+
+2a. **Visual refresh (Foundry theme)** — ✅ done
+   - Styling only: graphite and molten-gold palette with a steel-blue focus colour and a new `border-strong` token for control boundaries; solid panel surfaces; a global `focus-visible` outline; system font stack. No behaviour, props, state or layout changes.
+   - Dark is the default palette on `:root`. Light applies only under `:root[data-theme="light"]`; the theme no longer follows `prefers-color-scheme`.
+   - Acceptance: every ResultsPanel state, the form and the field builder read well in both palettes; text meets 4.5:1 and control boundaries and focus 3:1 against adjacent surfaces.
+   - Follow-up, ⏳ not started: a light/dark toggle that sets `data-theme` on `<html>` (and remembers the choice).
 
 3. **Server generation contract** — ⏳ not started
    - Add `api/generate.ts` and `tsconfig.api.json`, shared authoritative validation, strict-schema generation with nullable union types, Groq request handling (`reasoning_effort: "low"`, `include_reasoning: false`), output validation, completion-token cap, and sanitized error mapping. Unit-test the schema builder and output validator.

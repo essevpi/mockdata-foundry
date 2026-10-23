@@ -27,14 +27,14 @@ function ResultsPanel({ state }: ResultsPanelProps) {
       ref={sectionRef}
       aria-busy={state.status === 'loading'}
       aria-labelledby="results-heading"
-      className="rounded-2xl border border-border bg-surface/40 p-5 sm:p-7"
+      className="rounded-2xl border border-border bg-surface p-5 sm:p-7"
     >
       <h2 id="results-heading" className="text-lg font-semibold text-content">
         Results
       </h2>
 
       {state.status === 'idle' && (
-        <div className="mt-6 rounded-xl border border-dashed border-border bg-surface-inset/50 px-5 py-10 text-center">
+        <div className="mt-6 rounded-xl border border-dashed border-border bg-surface-inset px-5 py-10 text-center">
           <h3 className="text-sm font-semibold text-content">No data yet</h3>
           <p className="mt-2 text-sm leading-6 text-content-muted">
             Generated records will appear here.
@@ -44,12 +44,12 @@ function ResultsPanel({ state }: ResultsPanelProps) {
 
       {state.status === 'loading' && (
         <div
-          className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-surface-inset/50 px-5 py-6"
+          className="mt-6 flex items-center gap-3 rounded-xl border border-border bg-surface-inset px-5 py-6"
           role="status"
         >
           <span
             aria-hidden="true"
-            className="size-4 animate-spin rounded-full border-2 border-border border-t-action motion-reduce:animate-none"
+            className="size-4 animate-spin rounded-full border-2 border-border-strong border-t-action motion-reduce:animate-none"
           />
           <p className="text-sm text-content">Generating your data…</p>
         </div>
@@ -57,7 +57,7 @@ function ResultsPanel({ state }: ResultsPanelProps) {
 
       {state.status === 'error' && (
         <div
-          className="mt-6 rounded-xl border border-danger/50 bg-surface-inset/50 px-5 py-4"
+          className="mt-6 rounded-xl border border-l-4 border-danger/60 border-l-danger bg-surface-inset px-5 py-4"
           role="alert"
         >
           <h3 className="text-sm font-semibold text-danger">Generation failed</h3>

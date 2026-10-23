@@ -1,59 +1,59 @@
 # MockData Foundry
 
-Portfolio web app that uses an LLM to generate realistic mock data for development and testing. The user describes a dataset and a flat record shape, then previews the generated data and exports it as JSON or CSV.
+Portfolio web app that uses an LLM to generate realistic mock data for development and testing. The user describes a dataset and a flat record shape, previews the generated data, and exports it as JSON or CSV.
 
 `PLAN.md` is the source of truth for scope, limits, the request/response contract, export conventions, architecture, milestones, acceptance criteria and per-task progress. Read it before starting any milestone work, and update its status markers when a task is completed.
 
-## Current State
-
-Milestones 1 and 2 are complete: the form, field builder, results panel, a local mock generator, and JSON/CSV downloads. The server function, provider integration and deployment are planned, not implemented. Groq and Vercel are plans until their integrations are actually added. See `PLAN.md` for exact progress.
+When a change affects the commands, project layout, conventions or dependency rules described in this file, update it in the same commit and keep it concise. Feature scope and progress belong in PLAN.md, not here.
 
 ## Stack
 
-React 19, TypeScript 6, Vite 8, Tailwind CSS 4. Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform.
+React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. Neither is integrated yet: treat both as plans until the server function and integrations are added (progress in `PLAN.md`).
 
 ## Project Layout
 
-- `src/App.tsx`, `src/main.tsx`: page composition and entry point
-- `src/features/generator/components/`: generator UI; `GeneratorWorkspace.tsx` owns the form and generation state; `ResultsPanel.tsx` renders the idle/loading/error/success states, with `ResultsTable.tsx` and `ExportActions.tsx` for the success state; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes
-- `src/features/generator/field-utils.ts`: generator-specific helpers (field drafts with stable ids, request building, issue visibility)
-- `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, and request validation
-- `src/lib/generate.ts`: the single `generate(request)` entry point (currently backed by `src/lib/mock-generator.ts`)
-- `src/lib/export.ts` and `src/lib/download.ts`: pure JSON/CSV serialization (see `PLAN.md` for the CSV null convention) and the browser download helper
+- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form and generation state; `ResultsPanel.tsx` renders the idle/loading/error/success states, using `ResultsTable.tsx` and `ExportActions.tsx` on success; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes.
+- `src/features/generator/field-utils.ts`: field drafts with stable ids, request building, issue visibility
+- `src/features/generator/result-utils.ts`: cell display formatting for the results table
+- `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation
+- `src/lib/generate.ts`: the single `generate(request)` entry point, currently backed by `src/lib/mock-generator.ts`. UI code calls only `generate()`; swapping the mock for the real provider happens behind it.
+- `src/lib/export.ts`, `src/lib/download.ts`: pure JSON/CSV serialization (CSV null convention in `PLAN.md`) and the browser download helper
 - `src/index.css`: Tailwind import and theme tokens
-- `public/`: static assets
 - Planned, not yet present: `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
 
 ## Code Organization
 
-- Keep `App.tsx` focused on page composition and high-level coordination; do not make it the container for the application's entire UI and logic.
-- Place substantial UI components with distinct responsibilities in separate `.tsx` files in an appropriate component directory.
-- Keep non-JSX types, constants, and pure logic in `.ts` modules.
-- Keep shared React state in its appropriate owning component; pass data and event handlers through props as needed, without duplicating state.
-- Extract components when this creates a meaningful responsibility boundary or improves maintainability; avoid splitting trivial markup or introducing premature abstractions.
-- When a task introduces a distinct UI responsibility, create or update the appropriate component or module rather than automatically adding everything to `App.tsx`.
-- Preserve existing behavior and the established structure unless a concrete reason justifies changing it.
+- Keep `App.tsx` limited to page composition; put new UI responsibilities in their own components under the relevant feature directory.
+- Keep types, constants and pure logic in `.ts` modules, separate from JSX.
 
 ## Styling
 
-Use the semantic Tailwind tokens defined in `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, and so on) instead of raw palette colors. Light is the default palette on `:root`, and the dark palette overrides it under `prefers-color-scheme: dark`; there is no theme toggle.
+Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`, `bg-action`, `border-border`, etc.), never raw palette colors. Dark is the default palette on `:root`; the light palette applies under `:root[data-theme="light"]`. Theme does not follow `prefers-color-scheme`. A light/dark toggle is planned; don't add one until its task begins. Use `border-border-strong` for form-control boundaries (`border-border` is for decorative dividers). A global `focus-visible` outline in `src/index.css` covers buttons, selects and checkboxes; text inputs keep their ring. New UI must work in both palettes. Until the toggle exists, preview light by running `document.documentElement.dataset.theme = 'light'` in the browser console. When changing palette values, keep text at 4.5:1 or more and control borders (`border-strong`) and focus at 3:1 or more against the surfaces they sit on, in both palettes.
 
-## Development and Checks
+## Commands
 
-- `npm run dev` starts the Vite development server.
-- `npm run build` runs the TypeScript build checks and creates the production bundle.
-- `npm run lint` runs ESLint.
-- `npm run preview` serves the built bundle locally.
-- `npm test` runs the unit tests once.
+- `npm run dev`: Vite dev server
+- `npm run build`: TypeScript checks and production bundle
+- `npm run lint`: ESLint
+- `npm test`: Vitest unit tests, single run
+- `npx vitest run <path>`: run a single test file
+- `npm run preview`: serve the built bundle
 
-`npm test` runs Vitest (`vitest run`) over `*.test.ts` files; tests cover pure `.ts` modules, and there are no component tests. TypeScript checks include unused locals and parameters; ESLint applies its recommended JavaScript, TypeScript, React Hooks, and React Refresh rules to `.ts` and `.tsx` files. No formatter is configured, so follow the surrounding code style. After each task, run lint, build and tests and check the affected state in the browser.
+## Checks and Tests
+
+- TypeScript flags unused locals and parameters; ESLint applies the recommended JavaScript, TypeScript, React Hooks and React Refresh rules.
+- No formatter is configured; match the surrounding code style.
+- Tests are `*.test.ts` files covering pure `.ts` modules; there are no component tests. Add or update tests when changing pure logic.
+- After each task, run lint, build and tests and fix any failures, then tell me which UI states to check in the browser (including dark mode where relevant).
 
 ## Git
 
-Make one commit per completed task or logical change. Fold small follow-ups (docs edits, label tweaks, review fixes) into the commit they belong to instead of committing them separately.
+- Make one commit per completed task or logical change, after checks pass. Fold small follow-ups (docs edits, label tweaks, review fixes) into the commit they belong to.
+- Never push unless I ask.
 
 ## Integration and Credential Safety
 
-Keep LLM provider credentials on the server; never expose secrets in browser code or commit them. Before implementing a provider integration, verify the current provider documentation for API behavior, authentication, and supported models. Treat Groq and Vercel as plans until their integrations are actually added.
-
-Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The Vercel CLI and Vitest are the only new development dependencies proposed; add each only when its task begins.
+- Keep LLM provider credentials server-side; never expose secrets in browser code or commit them.
+- Before implementing a provider integration, check the current provider documentation for API behavior, authentication and supported models.
+- Treat LLM output as untrusted: validate provider responses against the contract in `PLAN.md` with hand-written checks before they reach the UI.
+- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The Vercel CLI is the only new development dependency proposed; add it only when its task begins.

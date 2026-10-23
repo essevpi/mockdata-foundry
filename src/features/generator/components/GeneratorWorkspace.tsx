@@ -136,7 +136,7 @@ function GeneratorWorkspace() {
         />
         <div>
           <button
-            className="w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-action-foreground transition hover:bg-action-hover disabled:cursor-not-allowed disabled:bg-surface-raised disabled:text-content-muted sm:w-auto sm:px-8"
+            className="w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-action-foreground transition hover:bg-action-hover disabled:cursor-not-allowed disabled:border disabled:border-border disabled:bg-surface-raised disabled:text-content-muted sm:w-auto sm:px-8"
             disabled={!requestValidation.valid || isLoading}
             type="submit"
           >

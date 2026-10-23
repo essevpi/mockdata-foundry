@@ -15,7 +15,7 @@ function MockOutcomeControl({ outcome, onChange }: MockOutcomeControlProps) {
         id="mock-outcome"
         value={outcome}
         onChange={(event) => onChange(event.target.value as MockOutcome)}
-        className="ml-2 rounded border border-border bg-input px-2 py-1 text-xs text-content outline-none focus:border-focus"
+        className="ml-2 rounded border border-border-strong bg-input px-2 py-1 text-xs text-content"
       >
         {MOCK_OUTCOMES.map((option) => (
           <option key={option} value={option}>

@@ -9,6 +9,7 @@
   --color-content: var(--theme-content);
   --color-content-muted: var(--theme-content-muted);
   --color-border: var(--theme-border);
+  --color-border-strong: var(--theme-border-strong);
   --color-action: var(--theme-action);
   --color-action-hover: var(--theme-action-hover);
   --color-action-foreground: var(--theme-action-foreground);
@@ -17,47 +18,49 @@
   --color-shadow: var(--theme-shadow);
 }
 
+/* Dark is the default palette. Theme does not follow prefers-color-scheme. */
 :root {
-  color-scheme: light;
-  --theme-app: #f1f5f9;
-  --theme-surface: #ffffff;
-  --theme-surface-raised: #f8fafc;
-  --theme-surface-inset: #f1f5f9;
-  --theme-input: #ffffff;
-  --theme-content: #0f172a;
-  --theme-content-muted: #475569;
-  --theme-border: #cbd5e1;
-  --theme-action: #b45309;
-  --theme-action-hover: #92400e;
-  --theme-action-foreground: #ffffff;
-  --theme-focus: #2563eb;
-  --theme-danger: #be123c;
-  --theme-shadow: #0f172a;
+  color-scheme: dark;
+  --theme-app: #1a1917;
+  --theme-surface: #23211e;
+  --theme-surface-raised: #2d2a26;
+  --theme-surface-inset: #141311;
+  --theme-input: #141311;
+  --theme-content: #ece6dc;
+  --theme-content-muted: #a39b8e;
+  --theme-border: #38342f;
+  --theme-border-strong: #78726a;
+  --theme-action: #f0a53a;
+  --theme-action-hover: #f7bd62;
+  --theme-action-foreground: #1a1917;
+  --theme-focus: #8fb2cc;
+  --theme-danger: #f08f80;
+  --theme-shadow: #000000;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --theme-app: #020617;
-    --theme-surface: #0f172a;
-    --theme-surface-raised: #1e293b;
-    --theme-surface-inset: #020617;
-    --theme-input: #020617;
-    --theme-content: #f8fafc;
-    --theme-content-muted: #94a3b8;
-    --theme-border: #334155;
-    --theme-action: #fbbf24;
-    --theme-action-hover: #fcd34d;
-    --theme-action-foreground: #020617;
-    --theme-focus: #38bdf8;
-    --theme-danger: #fda4af;
-    --theme-shadow: #020617;
-  }
+:root[data-theme="light"] {
+  color-scheme: light;
+  --theme-app: #eceae6;
+  --theme-surface: #f8f7f4;
+  --theme-surface-raised: #ffffff;
+  --theme-surface-inset: #e3e0da;
+  --theme-input: #ffffff;
+  --theme-content: #22201c;
+  --theme-content-muted: #5e574d;
+  --theme-border: #d3cec5;
+  --theme-border-strong: #7a7367;
+  --theme-action: #8a4b0f;
+  --theme-action-hover: #6f3b0a;
+  --theme-action-foreground: #ffffff;
+  --theme-focus: #2a5a86;
+  --theme-danger: #a8321f;
+  --theme-shadow: #3a342c;
 }
 
 :root {
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  accent-color: var(--theme-action);
 }
 
 body {
@@ -70,4 +73,15 @@ button,
 input,
 textarea {
   font: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--theme-focus) 35%, transparent);
+}
+
+@layer base {
+  :where(button, select, a, input[type="checkbox"]):focus-visible {
+    outline: 2px solid var(--theme-focus);
+    outline-offset: 2px;
+  }
 }

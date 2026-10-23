@@ -14,7 +14,7 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 };
 
 const inputClassName =
-  'mt-1.5 block w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/15';
+  'mt-1.5 block w-full rounded-lg border border-border-strong bg-input px-3 py-2 text-sm text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/30';
 
 type FieldEditorProps = {
   field: FieldDraft;
@@ -39,7 +39,7 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
   const nullableInputId = getFieldInputId(field.id, 'nullable');
 
   return (
-    <fieldset className="rounded-xl border border-border bg-surface-inset/50 p-4">
+    <fieldset className="rounded-xl border border-border bg-surface-inset p-4">
       <legend className="sr-only">Field {index + 1}</legend>
 
       <div className="grid gap-x-4 gap-y-4 md:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_minmax(0,1.5fr)]">
@@ -109,7 +109,7 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
               checked={field.nullable}
               onChange={(event) => onUpdate({ nullable: event.target.checked })}
               type="checkbox"
-              className="size-4 rounded border-border bg-input text-action focus:ring-focus"
+              className="size-4 accent-action"
             />
             Allow null values
           </label>

@@ -7,7 +7,7 @@ function App() {
         <header className="mb-10 flex items-center gap-3 sm:mb-14">
           <div
             aria-hidden="true"
-            className="grid size-10 place-items-center rounded-xl bg-action text-lg font-black text-action-foreground shadow-lg shadow-action/15"
+            className="grid size-10 place-items-center rounded-lg bg-action text-lg font-black text-action-foreground"
           >
             M
           </div>
@@ -18,10 +18,8 @@ function App() {
         </header>
 
         <section className="max-w-3xl">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.16em] text-action-hover">
-            New dataset
-          </p>
-          <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-content sm:text-5xl">
+          <p className="mb-3 text-sm font-medium text-content-muted">New dataset</p>
+          <h1 className="max-w-2xl text-4xl font-semibold tracking-tighter text-content sm:text-5xl">
             Shape realistic data for your next build.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-7 text-content-muted">

@@ -8,7 +8,7 @@ type ExportActionsProps = {
 };
 
 const buttonClassName =
-  'rounded-xl border border-border bg-surface-raised px-4 py-2 text-sm font-semibold text-content transition hover:border-action hover:text-action-hover';
+  'rounded-xl border border-border-strong bg-surface-raised px-4 py-2 text-sm font-semibold text-content transition hover:border-action hover:text-action';
 
 function ExportActions({ columns, records }: ExportActionsProps) {
   return (

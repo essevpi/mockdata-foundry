@@ -22,7 +22,7 @@ function DatasetDetailsPanel({
   onRecordCountChange,
 }: DatasetDetailsPanelProps) {
   return (
-    <section className="rounded-2xl border border-border bg-surface/70 p-5 shadow-2xl shadow-shadow/20 sm:p-7">
+    <section className="rounded-2xl border border-border bg-surface p-5 sm:p-7">
       <h2 id="dataset-setup-heading" className="text-lg font-semibold text-content">
         Describe your dataset
       </h2>
@@ -43,7 +43,7 @@ function DatasetDetailsPanel({
           value={description}
           onBlur={onDescriptionBlur}
           onChange={(event) => onDescriptionChange(event.target.value)}
-          className="mt-2 block w-full resize-y rounded-xl border border-border bg-input px-4 py-3 text-sm leading-6 text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/15"
+          className="mt-2 block w-full resize-y rounded-xl border border-border-strong bg-input px-4 py-3 text-sm leading-6 text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/30"
         />
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-xs text-content-muted">
@@ -74,7 +74,7 @@ function DatasetDetailsPanel({
           value={recordCount}
           onBlur={onCountBlur}
           onChange={(event) => onRecordCountChange(event.target.value)}
-          className="mt-3 block w-full rounded-xl border border-border bg-input px-4 py-3 text-base font-medium text-content outline-none focus:border-focus focus:ring-4 focus:ring-focus/15 sm:max-w-40"
+          className="mt-3 block w-full rounded-xl border border-border-strong bg-input px-4 py-3 text-base font-medium text-content outline-none focus:border-focus focus:ring-4 focus:ring-focus/30 sm:max-w-40"
         />
         <p className="mt-2 text-xs text-content-muted">
           {REQUEST_LIMITS.recordsMinCount}–{REQUEST_LIMITS.recordsMaxCount} records per generation

@@ -9,7 +9,7 @@ type ResultsTableProps = {
 const cellClassNames = {
   boolean: 'font-mono text-xs',
   empty: 'font-mono text-xs text-content-muted',
-  null: 'rounded bg-surface-raised px-1.5 py-0.5 font-mono text-xs italic text-content-muted',
+  null: 'rounded border border-border bg-surface-raised px-1.5 py-0.5 font-mono text-xs italic text-content-muted',
   number: 'font-mono text-xs tabular-nums',
   text: '',
 } as const;
@@ -23,10 +23,10 @@ function ResultCell({ value }: { value: PrimitiveValue }) {
 function ResultsTable({ columns, records }: ResultsTableProps) {
   return (
     <div>
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="overflow-x-auto rounded-xl border border-border bg-surface-inset">
         <table className="w-full min-w-max border-collapse text-left text-sm text-content">
           <caption className="sr-only">Generated records</caption>
-          <thead className="bg-surface-raised text-xs uppercase tracking-wide text-content-muted">
+          <thead className="bg-surface-raised text-xs text-content-muted">
             <tr>
               <th scope="col" className="px-3 py-2 text-right font-medium">
                 #
@@ -40,7 +40,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
           </thead>
           <tbody className="divide-y divide-border">
             {records.map((record, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr key={rowIndex} className="hover:bg-surface-raised/60">
                 <th
                   scope="row"
                   className="px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted"
