@@ -1,3 +1,4 @@
+import { Trash2 } from 'lucide-react';
 import {
   FIELD_TYPES,
   REQUEST_LIMITS,
@@ -122,12 +123,13 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
           <FieldIssues issues={issues.nullable} />
         </div>
         <button
-          className="text-xs font-medium text-content-muted underline decoration-border underline-offset-4 transition hover:text-danger"
+          className="grid size-9 place-items-center rounded-lg text-content-muted transition hover:text-danger"
           aria-label={`Remove field ${index + 1}`}
           onClick={onRemove}
+          title="Remove field"
           type="button"
         >
-          Remove
+          <Trash2 aria-hidden="true" className="size-4" />
         </button>
       </div>
     </fieldset>

@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import { ADD_FIELD_BUTTON_ID, getFieldValidationIssues, type FieldDraft } from '../field-utils';
 import { FieldEditor } from './FieldEditor';
@@ -24,7 +25,7 @@ function FieldBuilderPanel({
   return (
     <section
       aria-labelledby="field-builder-heading"
-      className="rounded-2xl border border-border bg-surface p-5 sm:p-7"
+      className="border-t border-border-strong pt-6"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -44,9 +45,9 @@ function FieldBuilderPanel({
         <div className="mt-6 rounded-xl border border-dashed border-border bg-surface-inset px-5 py-10 text-center">
           <div
             aria-hidden="true"
-            className="mx-auto grid size-10 place-items-center rounded-full bg-surface-raised text-lg text-content-muted"
+            className="mx-auto grid size-10 place-items-center rounded-full bg-surface-raised text-content-muted"
           >
-            +
+            <Plus className="size-5" />
           </div>
           <h3 className="mt-4 text-sm font-semibold text-content">No fields yet</h3>
           <p className="mt-2 text-sm leading-6 text-content-muted">
@@ -77,12 +78,13 @@ function FieldBuilderPanel({
 
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
         <button
-          className="rounded-xl border border-border-strong bg-surface-raised px-5 py-2.5 text-sm font-semibold text-content transition hover:border-action hover:text-action disabled:cursor-not-allowed disabled:border-border disabled:bg-surface disabled:text-content-muted/60"
+          className="flex items-center gap-2 rounded-xl border border-border-strong bg-surface-raised px-5 py-2.5 text-sm font-semibold text-content transition hover:border-action hover:text-action disabled:cursor-not-allowed disabled:border-border disabled:bg-surface disabled:text-content-muted/60"
           disabled={atFieldLimit}
           id={ADD_FIELD_BUTTON_ID}
           onClick={onAddField}
           type="button"
         >
+          <Plus aria-hidden="true" className="size-4" />
           {fields.length === 0 ? 'Add your first field' : 'Add field'}
         </button>
         <p className="text-xs leading-5 text-content-muted">

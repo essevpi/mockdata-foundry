@@ -3,7 +3,7 @@ import { GeneratorWorkspace } from './features/generator/components/GeneratorWor
 
 function App() {
   return (
-    <div className="relative flex min-h-svh flex-col bg-app text-content lg:h-svh lg:overflow-hidden">
+    <div className="relative flex min-h-svh flex-col bg-app text-content lg:h-svh lg:overflow-clip">
       <header className="flex items-center justify-between gap-3 border-b border-border-strong px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <div

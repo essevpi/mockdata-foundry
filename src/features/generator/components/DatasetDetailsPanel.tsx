@@ -1,8 +1,9 @@
+import { Minus, Plus } from 'lucide-react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import { canStepRecordCount, stepRecordCount } from '../field-utils';
 
 const stepperButtonClassName =
-  'grid size-10.5 place-items-center rounded-lg text-lg text-content transition hover:text-action aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:text-content-muted/50';
+  'grid size-10.5 place-items-center rounded-lg text-content transition hover:text-action aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:text-content-muted/50';
 
 type DatasetDetailsPanelProps = {
   countIssues: ValidationIssue[];
@@ -26,7 +27,7 @@ function DatasetDetailsPanel({
   onRecordCountChange,
 }: DatasetDetailsPanelProps) {
   return (
-    <section className="rounded-2xl border border-border bg-surface p-5 sm:p-7">
+    <section>
       <h2 id="dataset-setup-heading" className="text-lg font-semibold text-content">
         Describe your dataset
       </h2>
@@ -87,7 +88,7 @@ function DatasetDetailsPanel({
               onClick={() => onRecordCountChange(stepRecordCount(recordCount, -1))}
               type="button"
             >
-              <span aria-hidden="true">−</span>
+              <Minus aria-hidden="true" className="size-4" />
             </button>
             <input
               id="record-count"
@@ -108,7 +109,7 @@ function DatasetDetailsPanel({
               onClick={() => onRecordCountChange(stepRecordCount(recordCount, 1))}
               type="button"
             >
-              <span aria-hidden="true">+</span>
+              <Plus aria-hidden="true" className="size-4" />
             </button>
           </div>
         </div>
