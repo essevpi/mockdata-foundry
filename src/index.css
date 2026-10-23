@@ -69,10 +69,23 @@ body {
   background: var(--theme-app);
 }
 
+/* Keep focused fields clear of the sticky Generate bar when the panes stack. */
+@media (max-width: 1023.98px) {
+  html {
+    scroll-padding-bottom: 7rem;
+  }
+}
+
 button,
 input,
+select,
 textarea {
   font: inherit;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--theme-border-strong) transparent;
 }
 
 ::selection {

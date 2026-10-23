@@ -18,7 +18,7 @@ import {
 } from '../field-utils';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
 import { FieldBuilderPanel } from './FieldBuilderPanel';
-import { MockOutcomeControl } from './MockOutcomeControl';
+import { GenerateBar } from './GenerateBar';
 import { ResultsPanel } from './ResultsPanel';
 
 function GeneratorWorkspace() {
@@ -109,55 +109,46 @@ function GeneratorWorkspace() {
   }
 
   return (
-    <div className="mt-10 space-y-6 lg:mt-12">
+    <div className="flex min-w-0 flex-1 flex-col lg:grid lg:min-h-0 lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]">
+      {/* Below lg the form is display: contents so the sticky Generate bar's containing block is
+          the whole stacked workspace and it stays visible over the results too. */}
       <form
         aria-labelledby="dataset-setup-heading"
-        className="space-y-6"
+        className="contents lg:flex lg:min-h-0 lg:min-w-0 lg:flex-col lg:border-r lg:border-border-strong"
         noValidate
         onSubmit={handleSubmit}
       >
-        <DatasetDetailsPanel
-          countIssues={getIssues('count')}
-          description={description}
-          descriptionIssues={getIssues('description')}
-          recordCount={recordCount}
-          onCountBlur={() => markTouched('count')}
-          onDescriptionBlur={() => markTouched('description')}
-          onDescriptionChange={setDescription}
-          onRecordCountChange={setRecordCount}
-        />
-        <FieldBuilderPanel
-          fields={fields}
-          fieldsIssues={getIssues('fields')}
-          validationIssues={validationIssues}
-          onAddField={addField}
-          onRemoveField={removeField}
-          onUpdateField={updateField}
-        />
-        <div>
-          <button
-            className="w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-action-foreground transition hover:bg-action-hover disabled:cursor-not-allowed disabled:border disabled:border-border disabled:bg-surface-raised disabled:text-content-muted sm:w-auto sm:px-8"
-            disabled={!requestValidation.valid || isLoading}
-            type="submit"
-          >
-            {isLoading ? 'Generating…' : 'Generate data'}
-          </button>
-          <p className="mt-3 text-xs leading-5 text-content-muted">
-            {requestValidation.valid
-              ? 'Ready to generate.'
-              : 'Add a description and at least one valid field to continue.'}
-          </p>
-          {import.meta.env.DEV && (
-            <MockOutcomeControl outcome={mockOutcome} onChange={setMockOutcome} />
-          )}
-          {getIssues('request').map((issue) => (
-            <p key={issue.message} className="mt-2 text-xs text-danger">
-              {issue.message}
-            </p>
-          ))}
+        <div className="space-y-6 p-4 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+          <DatasetDetailsPanel
+            countIssues={getIssues('count')}
+            description={description}
+            descriptionIssues={getIssues('description')}
+            recordCount={recordCount}
+            onCountBlur={() => markTouched('count')}
+            onDescriptionBlur={() => markTouched('description')}
+            onDescriptionChange={setDescription}
+            onRecordCountChange={setRecordCount}
+          />
+          <FieldBuilderPanel
+            fields={fields}
+            fieldsIssues={getIssues('fields')}
+            validationIssues={validationIssues}
+            onAddField={addField}
+            onRemoveField={removeField}
+            onUpdateField={updateField}
+          />
         </div>
+        <GenerateBar
+          isLoading={isLoading}
+          isValid={requestValidation.valid}
+          mockOutcome={mockOutcome}
+          requestIssues={getIssues('request')}
+          onMockOutcomeChange={setMockOutcome}
+        />
       </form>
-      <ResultsPanel state={generation} />
+      <div className="flex min-w-0 flex-col p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto">
+        <ResultsPanel state={generation} />
+      </div>
     </div>
   );
 }

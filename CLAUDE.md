@@ -12,7 +12,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Approved UI libraries, t
 
 ## Project Layout
 
-- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form and generation state; `ResultsPanel.tsx` renders the idle/loading/error/success states, using `ResultsTable.tsx` and `ExportActions.tsx` on success; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes.
+- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form, generation state and the two-pane layout; `GenerateBar.tsx` holds the submit button, request issues and the dev mock control; `ResultsPanel.tsx` renders the idle/loading/error/success states, using `ResultsTable.tsx` and `ExportActions.tsx` on success; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes.
 - `src/features/generator/field-utils.ts`: field drafts with stable ids, request building, issue visibility
 - `src/features/generator/result-utils.ts`: cell display formatting for the results table
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation

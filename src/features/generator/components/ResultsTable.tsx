@@ -28,7 +28,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
           <caption className="sr-only">Generated records</caption>
           <thead className="bg-surface-raised text-xs text-content-muted">
             <tr>
-              <th scope="col" className="px-3 py-2 text-right font-medium">
+              <th scope="col" className="w-px whitespace-nowrap px-3 py-2 text-right font-medium">
                 #
               </th>
               {columns.map((column) => (
@@ -43,7 +43,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
               <tr key={rowIndex} className="hover:bg-surface-raised/60">
                 <th
                   scope="row"
-                  className="px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted"
+                  className="w-px whitespace-nowrap px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted"
                 >
                   {rowIndex + 1}
                 </th>

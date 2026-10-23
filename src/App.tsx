@@ -2,35 +2,28 @@ import { GeneratorWorkspace } from './features/generator/components/GeneratorWor
 
 function App() {
   return (
-    <main className="min-h-screen bg-app px-4 py-6 text-content sm:px-6 sm:py-10 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-10 flex items-center gap-3 sm:mb-14">
+    <div className="relative flex min-h-svh flex-col bg-app text-content lg:h-svh lg:overflow-hidden">
+      <header className="flex items-center justify-between gap-3 border-b border-border-strong px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-3">
           <div
             aria-hidden="true"
-            className="grid size-10 place-items-center rounded-lg bg-action text-lg font-black text-action-foreground"
+            className="grid size-9 place-items-center rounded-lg bg-action text-base font-black text-action-foreground"
           >
             M
           </div>
           <div>
-            <p className="text-sm font-semibold tracking-tight text-content">MockData Foundry</p>
-            <p className="text-xs text-content-muted">Structured mock-data generator</p>
+            <h1 className="text-sm font-semibold tracking-tight text-content">MockData Foundry</h1>
+            <p className="hidden text-xs text-content-muted sm:block">
+              Describe a dataset, shape its records, export JSON or CSV.
+            </p>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section className="max-w-3xl">
-          <p className="mb-3 text-sm font-medium text-content-muted">New dataset</p>
-          <h1 className="max-w-2xl text-4xl font-semibold tracking-tighter text-content sm:text-5xl">
-            Shape realistic data for your next build.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-content-muted">
-            Describe the records you need, set their shape, and generate a clean sample when
-            you&apos;re ready.
-          </p>
-        </section>
-
+      <main className="flex min-w-0 flex-1 flex-col lg:min-h-0">
         <GeneratorWorkspace />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
 

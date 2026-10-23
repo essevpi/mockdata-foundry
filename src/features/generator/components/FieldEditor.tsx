@@ -14,7 +14,7 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 };
 
 const inputClassName =
-  'mt-1.5 block w-full rounded-lg border border-border-strong bg-input px-3 py-2 text-sm text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/30';
+  'mt-1.5 block h-10.5 w-full rounded-lg border border-border-strong bg-input px-3 py-2 text-sm text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/30';
 
 type FieldEditorProps = {
   field: FieldDraft;
@@ -42,59 +42,65 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
     <fieldset className="rounded-xl border border-border bg-surface-inset p-4">
       <legend className="sr-only">Field {index + 1}</legend>
 
-      <div className="grid gap-x-4 gap-y-4 md:grid-cols-[minmax(0,1fr)_minmax(0,12rem)_minmax(0,1.5fr)]">
-        <div>
-          <label htmlFor={nameInputId} className="block text-xs font-medium text-content">
-            <span aria-hidden="true" className="mr-1.5 text-content-muted">
-              {index + 1}.
-            </span>
-            Field name
-          </label>
-          <input
-            id={nameInputId}
-            maxLength={REQUEST_LIMITS.fieldNameMaxLength}
-            value={field.name}
-            onChange={(event) => onUpdate({ name: event.target.value })}
-            aria-invalid={issues.name.length > 0}
-            className={inputClassName}
-          />
-          <FieldIssues issues={issues.name} />
-        </div>
+      {/* Container queries: the grid follows the width of the pane, not the viewport. */}
+      <div className="@container">
+        <div className="grid gap-x-4 gap-y-4 @sm:grid-cols-[minmax(0,1fr)_minmax(0,10rem)] @3xl:grid-cols-[minmax(0,1fr)_minmax(0,10rem)_minmax(0,1.5fr)]">
+          <div>
+            <label
+              htmlFor={nameInputId}
+              className="block whitespace-nowrap text-xs font-medium text-content"
+            >
+              <span aria-hidden="true" className="mr-1.5 text-content-muted">
+                {index + 1}.
+              </span>
+              Field name
+            </label>
+            <input
+              id={nameInputId}
+              maxLength={REQUEST_LIMITS.fieldNameMaxLength}
+              value={field.name}
+              onChange={(event) => onUpdate({ name: event.target.value })}
+              aria-invalid={issues.name.length > 0}
+              className={inputClassName}
+            />
+            <FieldIssues issues={issues.name} />
+          </div>
 
-        <div>
-          <label htmlFor={typeInputId} className="block text-xs font-medium text-content">
-            Type
-          </label>
-          <select
-            id={typeInputId}
-            value={field.type}
-            onChange={(event) => onUpdate({ type: event.target.value as FieldType })}
-            aria-invalid={issues.type.length > 0}
-            className={inputClassName}
-          >
-            {FIELD_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {FIELD_TYPE_LABELS[type]}
-              </option>
-            ))}
-          </select>
-          <FieldIssues issues={issues.type} />
-        </div>
+          <div>
+            <label htmlFor={typeInputId} className="block text-xs font-medium text-content">
+              Type
+            </label>
+            <select
+              id={typeInputId}
+              value={field.type}
+              onChange={(event) => onUpdate({ type: event.target.value as FieldType })}
+              aria-invalid={issues.type.length > 0}
+              className={inputClassName}
+            >
+              {FIELD_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {FIELD_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </select>
+            <FieldIssues issues={issues.type} />
+          </div>
 
-        <div>
-          <label htmlFor={guidanceInputId} className="block text-xs font-medium text-content">
-            Guidance <span className="font-normal text-content-muted">(optional)</span>
-          </label>
-          <input
-            id={guidanceInputId}
-            maxLength={REQUEST_LIMITS.fieldGuidanceMaxLength}
-            placeholder="For example: use a work email address"
-            value={field.guidance ?? ''}
-            onChange={(event) => onUpdate({ guidance: event.target.value })}
-            aria-invalid={issues.guidance.length > 0}
-            className={inputClassName}
-          />
-          <FieldIssues issues={issues.guidance} />
+          <div className="@sm:col-span-2 @3xl:col-span-1">
+            <label htmlFor={guidanceInputId} className="block text-xs font-medium text-content">
+              Guidance <span className="font-normal text-content-muted">(optional)</span>
+            </label>
+            <input
+              id={guidanceInputId}
+              maxLength={REQUEST_LIMITS.fieldGuidanceMaxLength}
+              placeholder="For example: use a work email address"
+              value={field.guidance ?? ''}
+              onChange={(event) => onUpdate({ guidance: event.target.value })}
+              aria-invalid={issues.guidance.length > 0}
+              className={inputClassName}
+            />
+            <FieldIssues issues={issues.guidance} />
+          </div>
         </div>
       </div>
 

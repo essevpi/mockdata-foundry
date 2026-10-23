@@ -27,14 +27,14 @@ function ResultsPanel({ state }: ResultsPanelProps) {
       ref={sectionRef}
       aria-busy={state.status === 'loading'}
       aria-labelledby="results-heading"
-      className="rounded-2xl border border-border bg-surface p-5 sm:p-7"
+      className="flex flex-1 flex-col"
     >
       <h2 id="results-heading" className="text-lg font-semibold text-content">
         Results
       </h2>
 
       {state.status === 'idle' && (
-        <div className="mt-6 rounded-xl border border-dashed border-border bg-surface-inset px-5 py-10 text-center">
+        <div className="mt-6 flex flex-1 flex-col justify-center rounded-xl border border-dashed border-border bg-surface-inset px-5 py-10 text-center">
           <h3 className="text-sm font-semibold text-content">No data yet</h3>
           <p className="mt-2 text-sm leading-6 text-content-muted">
             Generated records will appear here.
