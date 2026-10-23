@@ -22,33 +22,46 @@ function ResultCell({ value }: { value: PrimitiveValue }) {
 
 function ResultsTable({ columns, records }: ResultsTableProps) {
   return (
-    <div>
-      <div className="overflow-x-auto rounded-xl border border-border bg-surface-inset">
-        <table className="w-full min-w-max border-collapse text-left text-sm text-content">
+    <div className="flex min-h-0 flex-col lg:flex-1">
+      {/* Focusable so keyboard users can scroll the table; sticky header row and # column. */}
+      <div
+        aria-label="Generated records"
+        className="table-scroll relative h-[70svh] overflow-auto rounded-xl border border-border lg:h-auto lg:min-h-64 lg:flex-1"
+        role="region"
+        tabIndex={0}
+      >
+        <table className="w-full min-w-max border-separate border-spacing-0 text-left text-sm text-content">
           <caption className="sr-only">Generated records</caption>
-          <thead className="bg-surface-raised text-xs text-content-muted">
+          <thead className="text-xs text-content-muted">
             <tr>
-              <th scope="col" className="w-px whitespace-nowrap px-3 py-2 text-right font-medium">
+              <th
+                scope="col"
+                className="sticky left-0 top-0 z-20 w-px whitespace-nowrap h-9 border-b border-r border-border bg-surface-raised px-3 py-0 text-right font-medium"
+              >
                 #
               </th>
               {columns.map((column) => (
-                <th key={column} scope="col" className="px-3 py-2 font-medium normal-case">
+                <th
+                  key={column}
+                  scope="col"
+                  className="sticky top-0 z-10 h-9 border-b border-border bg-surface-raised px-3 py-0 font-medium normal-case"
+                >
                   {column}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody>
             {records.map((record, rowIndex) => (
-              <tr key={rowIndex} className="hover:bg-surface-raised/60">
+              <tr key={rowIndex} className="group">
                 <th
                   scope="row"
-                  className="w-px whitespace-nowrap px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted"
+                  className="sticky left-0 z-10 w-px whitespace-nowrap border-b border-r border-border bg-surface-inset px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted group-hover:bg-surface-raised"
                 >
                   {rowIndex + 1}
                 </th>
                 {columns.map((column) => (
-                  <td key={column} className="px-3 py-2">
+                  <td key={column} className="border-b border-border px-3 py-2 group-hover:bg-surface-raised/60">
                     <ResultCell value={record[column]} />
                   </td>
                 ))}
@@ -57,7 +70,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-xs text-content-muted">
+      <p className="mt-3 flex-none text-xs text-content-muted">
         <span className="font-mono">null</span> marks a missing value; <span className="font-mono">""</span>{' '}
         is an empty string.
       </p>

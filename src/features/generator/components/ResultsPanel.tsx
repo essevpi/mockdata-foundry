@@ -30,7 +30,7 @@ function ResultsPanel({ state }: ResultsPanelProps) {
       ref={sectionRef}
       aria-busy={state.status === 'loading'}
       aria-labelledby="results-heading"
-      className="flex flex-1 flex-col"
+      className="flex flex-1 flex-col lg:min-h-0"
     >
       <div className="flex min-h-11 items-center justify-between gap-3">
         <h2 id="results-heading" className="text-lg font-semibold text-content">
@@ -91,7 +91,7 @@ function ResultsPanel({ state }: ResultsPanelProps) {
       )}
 
       {state.status === 'success' && (
-        <div className="mt-2 space-y-5">
+        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-5">
           <p className="text-sm text-content-muted" role="status">
             {state.result.records.length} {state.result.records.length === 1 ? 'record' : 'records'}{' '}
             generated.
