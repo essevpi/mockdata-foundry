@@ -5,6 +5,7 @@
   --color-surface: var(--theme-surface);
   --color-surface-raised: var(--theme-surface-raised);
   --color-surface-inset: var(--theme-surface-inset);
+  --color-button: var(--theme-button);
   --color-input: var(--theme-input);
   --color-content: var(--theme-content);
   --color-content-muted: var(--theme-content-muted);
@@ -25,6 +26,7 @@
   --theme-surface: #23211e;
   --theme-surface-raised: #2d2a26;
   --theme-surface-inset: #141311;
+  --theme-button: #2d2a26;
   --theme-input: #141311;
   --theme-content: #ece6dc;
   --theme-content-muted: #a39b8e;
@@ -40,19 +42,23 @@
 
 :root[data-theme="light"] {
   color-scheme: light;
-  --theme-app: #eceae6;
-  --theme-surface: #f8f7f4;
+  /* Light surfaces darken a small step at a time: page, then cards (surface), then wells
+     (inputs, table, editor). Buttons are never lighter than what they sit on. Neutral greys with
+     only a slight warmth, so the amber accent stays the one strong colour. */
+  --theme-app: #faf9f7;
+  --theme-surface: #f2f0ec;
   --theme-surface-raised: #ffffff;
-  --theme-surface-inset: #e3e0da;
-  --theme-input: #ffffff;
-  --theme-content: #22201c;
-  --theme-content-muted: #5e574d;
-  --theme-border: #d3cec5;
-  --theme-border-strong: #7a7367;
-  --theme-action: #8a4b0f;
-  --theme-action-hover: #6f3b0a;
+  --theme-surface-inset: #eae8e3;
+  --theme-button: #e6e4de;
+  --theme-input: #eae8e3;
+  --theme-content: #1f1e1b;
+  --theme-content-muted: #57534b;
+  --theme-border: #dcd9d1;
+  --theme-border-strong: #6d6a62;
+  --theme-action: #a04a08;
+  --theme-action-hover: #833d06;
   --theme-action-foreground: #ffffff;
-  --theme-focus: #2a5a86;
+  --theme-focus: #1f5f99;
   --theme-danger: #a8321f;
   --theme-shadow: #3a342c;
 }
@@ -113,9 +119,9 @@ html {
   background:
     linear-gradient(var(--theme-border), var(--theme-border)) 0 calc(var(--table-header-height) - 1px) /
       100% 1px no-repeat,
-    linear-gradient(var(--theme-surface-raised), var(--theme-surface-raised)) 0 0 / 100%
+    linear-gradient(var(--theme-surface-inset), var(--theme-surface-inset)) 0 0 / 100%
       var(--table-header-height) no-repeat,
-    var(--theme-surface-inset);
+    var(--theme-surface);
 }
 
 @supports selector(::-webkit-scrollbar) {

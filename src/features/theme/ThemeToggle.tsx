@@ -29,7 +29,7 @@ function ThemeToggle() {
     <button
       aria-label="Light theme"
       aria-pressed={isLight}
-      className="grid size-10 place-items-center rounded-lg border border-border-strong bg-surface-raised text-content transition hover:border-action hover:text-action"
+      className="grid size-10 place-items-center rounded-lg bg-button text-content transition hover:bg-action/15 hover:text-action"
       onClick={toggleTheme}
       title={isLight ? 'Switch to dark theme' : 'Switch to light theme'}
       type="button"

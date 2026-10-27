@@ -3,7 +3,7 @@ import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import { canStepRecordCount, stepRecordCount } from '../field-utils';
 
 const stepperButtonClassName =
-  'grid size-10.5 place-items-center rounded-lg text-content transition hover:text-action aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:text-content-muted/50';
+  'grid size-10.5 place-items-center text-content transition focus-visible:-outline-offset-2 hover:bg-action/15 hover:text-content aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:bg-transparent aria-disabled:hover:text-content-muted/50';
 
 type DatasetDetailsPanelProps = {
   countIssues: ValidationIssue[];
@@ -48,7 +48,7 @@ function DatasetDetailsPanel({
           value={description}
           onBlur={onDescriptionBlur}
           onChange={(event) => onDescriptionChange(event.target.value)}
-          className="mt-2 block w-full resize-y rounded-xl border border-border-strong bg-input px-4 py-3 text-sm leading-6 text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/30"
+          className="mt-2 block w-full resize-y rounded-xl border border-border-strong bg-input px-4 py-3 text-sm leading-6 text-content outline-none placeholder:text-content-muted focus:border-focus focus:ring-4 focus:ring-focus/30"
         />
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-xs text-content-muted">
@@ -77,7 +77,7 @@ function DatasetDetailsPanel({
             </p>
           </div>
           <div
-            className="flex items-center rounded-xl border border-border-strong bg-input focus-within:border-focus focus-within:ring-4 focus-within:ring-focus/30"
+            className="flex items-center overflow-hidden rounded-xl border border-border-strong bg-input focus-within:border-focus focus-within:ring-4 focus-within:ring-focus/30"
             role="group"
             aria-label="Record count"
           >

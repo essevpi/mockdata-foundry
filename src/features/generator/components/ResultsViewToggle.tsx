@@ -54,7 +54,7 @@ function ResultsViewToggle({ view, onChange }: ResultsViewToggleProps) {
             className={`relative flex items-center rounded-[10px] px-3.5 text-sm transition-colors ${
               selected
                 ? 'font-semibold text-content'
-                : 'font-medium text-content-muted hover:text-content'
+                : 'font-medium text-content-muted hover:bg-action/10 hover:text-content'
             }`}
             id={getResultsTabId(tabView)}
             onClick={() => onChange(tabView)}
@@ -71,8 +71,8 @@ function ResultsViewToggle({ view, onChange }: ResultsViewToggleProps) {
               />
             )}
             <span className="relative flex items-center gap-2">
-              <Icon aria-hidden="true" className="size-4" />
               {label}
+              <Icon aria-hidden="true" className="size-4" />
             </span>
           </button>
         );

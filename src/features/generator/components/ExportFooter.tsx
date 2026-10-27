@@ -9,7 +9,7 @@ type ExportFooterProps = {
 };
 
 const buttonClassName =
-  'flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-border-strong bg-surface-raised px-3 text-sm font-semibold text-content transition hover:border-action hover:text-action @xl:w-auto @xl:justify-self-start @xl:px-4';
+  'flex h-10 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-button px-3 text-sm font-semibold text-content transition hover:bg-action/15 hover:text-action @xl:w-auto @xl:justify-self-start @xl:px-4';
 
 const notesClassName = 'col-span-2 space-y-2 text-xs leading-5 text-content-muted @xl:col-span-1';
 
@@ -31,8 +31,8 @@ function ExportFooter({ columns, records }: ExportFooterProps) {
           }
           type="button"
         >
-          <Download aria-hidden="true" className="size-4 shrink-0" />
           Download JSON
+          <Download aria-hidden="true" className="size-4 shrink-0" />
         </button>
         <button
           className={buttonClassName}
@@ -41,8 +41,8 @@ function ExportFooter({ columns, records }: ExportFooterProps) {
           }
           type="button"
         >
-          <Download aria-hidden="true" className="size-4 shrink-0" />
           Download CSV
+          <Download aria-hidden="true" className="size-4 shrink-0" />
         </button>
 
         <div className={notesClassName}>

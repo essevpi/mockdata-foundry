@@ -55,8 +55,8 @@ function JsonEditorView({ columns, records }: JsonEditorViewProps) {
 
   return (
     <div className="flex min-h-0 flex-col lg:flex-1">
-      <div className="flex h-[70svh] flex-col overflow-hidden rounded-xl border border-border bg-surface-inset lg:h-auto lg:min-h-64 lg:flex-1">
-        <div className="flex h-9 flex-none items-center justify-between gap-3 border-b border-border bg-surface-raised px-3">
+      <div className="flex h-[70svh] flex-col overflow-hidden rounded-xl border border-border bg-surface lg:h-auto lg:min-h-64 lg:flex-1">
+        <div className="flex h-9 flex-none items-center justify-between gap-3 border-b border-border bg-surface-inset px-3">
           <p className="flex min-w-0 items-center gap-2 font-mono text-xs text-content">
             <FileJson aria-hidden="true" className="size-4 flex-none text-content-muted" />
             <span className="truncate">{FILE_NAME}</span>
@@ -66,16 +66,16 @@ function JsonEditorView({ columns, records }: JsonEditorViewProps) {
               {copyMessages[copyStatus]}
             </span>
             <button
-              className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted transition hover:text-action"
+              className="flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted transition hover:bg-action/15 hover:text-action"
               onClick={handleCopy}
               type="button"
             >
+              Copy
               {copyStatus === 'copied' ? (
                 <Check aria-hidden="true" className="size-3.5" />
               ) : (
                 <Copy aria-hidden="true" className="size-3.5" />
               )}
-              Copy
             </button>
           </div>
         </div>
@@ -90,7 +90,7 @@ function JsonEditorView({ columns, records }: JsonEditorViewProps) {
           <div className="flex min-w-max font-mono text-xs leading-5">
             <div
               aria-hidden="true"
-              className="sticky left-0 z-10 flex-none select-none border-r border-border bg-surface-inset px-3 py-3 text-right tabular-nums text-content-muted"
+              className="sticky left-0 z-10 flex-none select-none border-r border-border bg-surface px-3 py-3 text-right tabular-nums text-content-muted"
             >
               {lines.map((_, index) => (
                 <div key={index}>{index + 1}</div>

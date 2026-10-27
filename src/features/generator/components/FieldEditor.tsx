@@ -17,7 +17,7 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
 };
 
 const inputClassName =
-  'block h-10 w-full rounded-lg border border-border-strong bg-input px-3 text-sm text-content outline-none placeholder:text-content-muted/70 focus:border-focus focus:ring-4 focus:ring-focus/30 @xl:h-9';
+  'block h-10 w-full rounded-lg border border-border-strong bg-input px-3 text-sm text-content outline-none placeholder:text-content-muted focus:border-focus focus:ring-4 focus:ring-focus/30 @xl:h-9';
 
 // Labels stay for screen readers; sighted users get the header row (wide) or the field itself.
 const labelClassName = 'sr-only';
@@ -126,16 +126,10 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
           <button
             aria-controls={guidanceOpen ? guidanceInputId : undefined}
             aria-expanded={guidanceOpen}
-            className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-content-muted transition hover:bg-action/15 hover:text-action @xl:col-start-5 @xl:justify-self-start"
+            className="flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-content-muted transition hover:bg-action/15 hover:text-content @xl:col-start-5 @xl:justify-self-start"
             onClick={toggleGuidance}
             type="button"
           >
-            <ChevronDown
-              aria-hidden="true"
-              className={`size-4 transition-transform motion-reduce:transition-none ${
-                guidanceOpen ? '' : '-rotate-90'
-              }`}
-            />
             Guidance
             {!guidanceOpen && field.guidance && (
               <>
@@ -143,17 +137,23 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
                 <span className="sr-only">(has text)</span>
               </>
             )}
+            <ChevronDown
+              aria-hidden="true"
+              className={`size-4 transition-transform motion-reduce:transition-none ${
+                guidanceOpen ? 'rotate-180' : ''
+              }`}
+            />
           </button>
 
           <button
             aria-label={`Remove field ${index + 1}`}
-            className="ml-auto flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-content-muted transition hover:bg-danger/10 hover:text-danger @xl:col-start-6 @xl:ml-0 @xl:size-9 @xl:justify-center @xl:px-0"
+            className="ml-auto flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-content-muted transition hover:bg-danger/8 hover:text-danger @xl:col-start-6 @xl:ml-0 @xl:size-9 @xl:justify-center @xl:px-0"
             onClick={onRemove}
             title="Remove field"
             type="button"
           >
-            <Trash2 aria-hidden="true" className="size-4" />
             <span className="hidden @sm:inline @xl:sr-only">Remove</span>
+            <Trash2 aria-hidden="true" className="size-4" />
           </button>
 
           {guidanceOpen && (

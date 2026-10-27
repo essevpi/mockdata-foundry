@@ -36,7 +36,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
             <tr>
               <th
                 scope="col"
-                className="sticky left-0 top-0 z-20 w-px whitespace-nowrap h-9 border-b border-r border-border bg-surface-raised px-3 py-0 text-right font-medium"
+                className="sticky left-0 top-0 z-20 w-px whitespace-nowrap h-9 border-b border-r border-border bg-surface-inset px-3 py-0 text-right font-medium"
               >
                 #
               </th>
@@ -44,7 +44,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
                 <th
                   key={column}
                   scope="col"
-                  className="sticky top-0 z-10 h-9 border-b border-border bg-surface-raised px-3 py-0 font-medium normal-case"
+                  className="sticky top-0 z-10 h-9 border-b border-border bg-surface-inset px-3 py-0 font-medium normal-case"
                 >
                   {column}
                 </th>
@@ -56,7 +56,7 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
               <tr key={rowIndex} className="group">
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 w-px whitespace-nowrap border-b border-r border-border bg-surface-inset px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted group-hover:bg-surface-raised"
+                  className="sticky left-0 z-10 w-px whitespace-nowrap border-b border-r border-border bg-surface px-3 py-2 text-right text-xs font-normal tabular-nums text-content-muted group-hover:bg-surface-raised"
                 >
                   {rowIndex + 1}
                 </th>

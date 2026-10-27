@@ -34,7 +34,7 @@ function GenerateBar({
         </div>
         <button
           aria-describedby={isValid ? undefined : 'generate-hint'}
-          className="order-1 w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-action-foreground transition hover:bg-action-hover disabled:cursor-not-allowed disabled:border disabled:border-border disabled:bg-surface-raised disabled:text-content-muted sm:order-2 sm:w-auto sm:px-8"
+          className="order-1 w-full rounded-xl bg-action px-4 py-3 text-sm font-semibold text-action-foreground transition hover:bg-action-hover disabled:cursor-not-allowed disabled:border disabled:border-border disabled:bg-button disabled:text-content-muted sm:order-2 sm:w-auto sm:px-8"
           disabled={!isValid || isLoading}
           type="submit"
         >

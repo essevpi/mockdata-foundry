@@ -56,7 +56,7 @@ function FieldBuilderPanel({
           </p>
         </div>
       ) : (
-        <div className="@container mt-6 overflow-hidden rounded-xl border border-border bg-surface-inset">
+        <div className="@container mt-6 overflow-hidden rounded-xl border border-border bg-surface">
           <div
             aria-hidden="true"
             className={`hidden border-b border-border px-3 py-2 text-xs font-medium text-content-muted @xl:grid ${FIELD_ROW_GAP} ${FIELD_ROW_COLUMNS}`}
@@ -95,14 +95,14 @@ function FieldBuilderPanel({
             : 'Use clear names such as customerName or invoice_total.'}
         </p>
         <button
-          className="flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border-strong bg-surface-raised px-4 text-sm font-semibold text-content transition hover:border-action hover:bg-action/10 hover:text-action disabled:cursor-not-allowed disabled:border-border disabled:bg-surface disabled:text-content-muted/60"
+          className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-button px-4 text-sm font-semibold text-content transition hover:bg-action/15 hover:text-action disabled:cursor-not-allowed disabled:bg-surface disabled:text-content-muted/60"
           disabled={atFieldLimit}
           id={ADD_FIELD_BUTTON_ID}
           onClick={onAddField}
           type="button"
         >
-          <Plus aria-hidden="true" className="size-4" />
           {fields.length === 0 ? 'Add your first field' : 'Add field'}
+          <Plus aria-hidden="true" className="size-4" />
         </button>
       </div>
     </section>
