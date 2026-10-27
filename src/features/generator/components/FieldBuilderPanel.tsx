@@ -2,7 +2,6 @@ import { Plus } from 'lucide-react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import { FIELD_ROW_COLUMNS, FIELD_ROW_GAP } from '../field-row-layout';
 import {
-  ADD_FIELD_BUTTON_ID,
   FIELD_PROBLEMS_ID,
   getFieldValidationIssues,
   getInvalidFieldIndexes,
@@ -28,7 +27,6 @@ function FieldBuilderPanel({
   onRemoveField,
   onUpdateField,
 }: FieldBuilderPanelProps) {
-  const atFieldLimit = fields.length >= REQUEST_LIMITS.fieldsMaxCount;
   const invalidIndexes = getInvalidFieldIndexes(problems);
 
   return (
@@ -42,7 +40,8 @@ function FieldBuilderPanel({
             Define your fields
           </h2>
           <p className="mt-1 text-sm leading-6 text-content-muted">
-            Choose the information each record should contain.
+            Choose the information each record should contain. Use clear names such as customerName or
+            invoice_total.
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-border-strong px-2.5 py-1 text-xs font-medium tabular-nums text-content-muted">
@@ -62,6 +61,15 @@ function FieldBuilderPanel({
           <p className="mt-2 text-sm leading-6 text-content-muted">
             Start with the information every record should include.
           </p>
+          <button
+            className="mx-auto mt-4 flex h-10 items-center gap-2 rounded-xl bg-button px-4 text-sm font-semibold text-content transition hover:bg-action/15 hover:text-action"
+            id="add-first-field-button"
+            onClick={onAddField}
+            type="button"
+          >
+            Add your first field
+            <Plus aria-hidden="true" className="size-4" />
+          </button>
         </div>
       ) : (
         <div className="@container mt-6 overflow-hidden rounded-xl border border-border bg-surface">
@@ -91,24 +99,6 @@ function FieldBuilderPanel({
           </ul>
         </div>
       )}
-
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="min-w-0 text-xs leading-5 text-content-muted">
-          {atFieldLimit
-            ? `You can include up to ${REQUEST_LIMITS.fieldsMaxCount} fields in one dataset.`
-            : 'Use clear names such as customerName or invoice_total.'}
-        </p>
-        <button
-          className="flex h-10 shrink-0 items-center gap-2 rounded-xl bg-button px-4 text-sm font-semibold text-content transition hover:bg-action/15 hover:text-action disabled:cursor-not-allowed disabled:bg-surface disabled:text-content-muted/60"
-          disabled={atFieldLimit}
-          id={ADD_FIELD_BUTTON_ID}
-          onClick={onAddField}
-          type="button"
-        >
-          {fields.length === 0 ? 'Add your first field' : 'Add field'}
-          <Plus aria-hidden="true" className="size-4" />
-        </button>
-      </div>
     </section>
   );
 }

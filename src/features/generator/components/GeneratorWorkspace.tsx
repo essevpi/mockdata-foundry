@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { flushSync } from 'react-dom';
 import { generate } from '../../../lib/generate';
 import {
@@ -11,16 +11,17 @@ import type { MockOutcome } from '../../../lib/mock-generator';
 import {
   buildGenerateRequest,
   createFieldDraft,
+  getFieldInputId,
   getFocusTargetIdAfterRemoval,
   getVisibleIssues,
   summarizeFieldIssues,
   type FieldDraft,
   type TouchedSection,
 } from '../field-utils';
+import { CommandBar } from './CommandBar';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
 import { DevTools } from './DevTools';
 import { FieldBuilderPanel } from './FieldBuilderPanel';
-import { GenerateBar } from './GenerateBar';
 import { PourLine } from './PourLine';
 import { ResultsPanel } from './ResultsPanel';
 
@@ -40,6 +41,19 @@ function GeneratorWorkspace() {
     : getVisibleIssues(requestValidation.issues, touched);
 
   const fieldProblems = summarizeFieldIssues(validationIssues, fields);
+  const paneRef = useRef<HTMLDivElement>(null);
+  const problemCount =
+    fieldProblems.length + getIssues('fields').length + getIssues('request').length;
+
+  // While the problem tray is showing the pane gets room below the list (instantly, so the field
+  // being edited can scroll above the tray); the room collapses smoothly when the problems clear.
+  useEffect(() => {
+    const active = document.activeElement;
+
+    if (problemCount > 0 && active instanceof HTMLElement && paneRef.current?.contains(active)) {
+      active.scrollIntoView({ block: 'nearest' });
+    }
+  }, [problemCount]);
 
   function getIssues(field: string): ValidationIssue[] {
     return validationIssues.filter((issue) => issue.field === field);
@@ -65,8 +79,18 @@ function GeneratorWorkspace() {
       return;
     }
 
+    const draft = createFieldDraft(fields);
+
     markTouched('fields');
-    setFields((currentFields) => [...currentFields, createFieldDraft(currentFields)]);
+    flushSync(() => {
+      setFields((currentFields) => [...currentFields, draft]);
+    });
+
+    // The Add button lives in the command bar, so bring the new row into view and start typing.
+    const nameInput = document.getElementById(getFieldInputId(draft.id, 'name'));
+
+    nameInput?.scrollIntoView({ block: 'nearest' });
+    nameInput?.focus();
   }
 
   function removeField(index: number) {
@@ -123,7 +147,14 @@ function GeneratorWorkspace() {
         noValidate
         onSubmit={handleSubmit}
       >
-        <div className="space-y-6 p-4 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+        <div
+          ref={paneRef}
+          className={`scroll-pb-32 space-y-6 p-4 sm:p-6 lg:min-h-0 lg:flex-1 lg:overflow-y-auto ${
+            problemCount > 0
+              ? 'lg:pb-32'
+              : 'transition-[padding] duration-200 motion-reduce:transition-none'
+          }`}
+        >
           <DatasetDetailsPanel
             countIssues={getIssues('count')}
             description={description}
@@ -143,13 +174,15 @@ function GeneratorWorkspace() {
             onUpdateField={updateField}
           />
         </div>
-        <GenerateBar
+        <CommandBar
+          atFieldLimit={fields.length >= REQUEST_LIMITS.fieldsMaxCount}
           fieldIssues={getIssues('fields')}
           fieldProblems={fieldProblems}
           fields={fields}
           isLoading={isLoading}
           isValid={requestValidation.valid}
           requestIssues={getIssues('request')}
+          onAddField={addField}
         />
       </form>
       {import.meta.env.DEV && <DevTools outcome={mockOutcome} onOutcomeChange={setMockOutcome} />}
