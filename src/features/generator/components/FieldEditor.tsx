@@ -1,6 +1,7 @@
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { FIELD_TYPES, REQUEST_LIMITS, type FieldType } from '../../../lib/generation';
+import { SelectField } from './SelectField';
 import { getFieldInputId, type FieldDraft, type FieldValidationIssues } from '../field-utils';
 import { FIELD_ROW_COLUMNS, FIELD_ROW_GAP } from '../field-row-layout';
 
@@ -16,6 +17,13 @@ const inputClassName =
 
 // Labels stay for screen readers; sighted users get the header row (wide) or the field itself.
 const labelClassName = 'sr-only';
+
+const FIELD_TYPE_GLYPHS: Record<FieldType, string> = {
+  string: 'Aa',
+  number: '1.5',
+  integer: '12',
+  boolean: 'T/F',
+};
 
 type FieldEditorProps = {
   field: FieldDraft;
@@ -61,7 +69,7 @@ function FieldEditor({
       <legend className="sr-only">Field {index + 1}</legend>
 
       <div
-        className={`grid grid-cols-[minmax(0,1fr)_minmax(0,9.5rem)] items-start gap-y-3 ${FIELD_ROW_GAP} ${FIELD_ROW_COLUMNS} @xl:gap-y-2`}
+        className={`grid grid-cols-[minmax(0,1fr)_minmax(0,10.5rem)] items-start gap-y-3 ${FIELD_ROW_GAP} ${FIELD_ROW_COLUMNS} @xl:gap-y-2`}
       >
         <span
           aria-hidden="true"
@@ -89,7 +97,7 @@ function FieldEditor({
           <label htmlFor={typeInputId} className={labelClassName}>
             Type
           </label>
-          <select
+          <SelectField
             id={typeInputId}
             value={field.type}
             onChange={(event) => onUpdate({ type: event.target.value as FieldType })}
@@ -97,11 +105,11 @@ function FieldEditor({
             className={inputClassName}
           >
             {FIELD_TYPES.map((type) => (
-              <option key={type} value={type}>
+              <option key={type} value={type} data-glyph={FIELD_TYPE_GLYPHS[type]}>
                 {FIELD_TYPE_LABELS[type]}
               </option>
             ))}
-          </select>
+          </SelectField>
         </div>
 
         {/* Wide rows: this wrapper disappears and its children become cells of the row grid. */}

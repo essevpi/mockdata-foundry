@@ -1,4 +1,5 @@
 import { MOCK_OUTCOMES, type MockOutcome } from '../../../lib/mock-generator';
+import { SelectField } from './SelectField';
 
 type MockOutcomeControlProps = {
   outcome: MockOutcome;
@@ -11,18 +12,18 @@ function MockOutcomeControl({ outcome, onChange }: MockOutcomeControlProps) {
       <label htmlFor="mock-outcome" className="font-medium text-content">
         Mock outcome
       </label>
-      <select
+      <SelectField
         id="mock-outcome"
         value={outcome}
         onChange={(event) => onChange(event.target.value as MockOutcome)}
-        className="w-full rounded border border-border-strong bg-input px-2 py-1 text-xs! text-content"
+        className="w-full rounded border border-border-strong bg-input py-1 pl-2 text-xs! text-content"
       >
         {MOCK_OUTCOMES.map((option) => (
           <option key={option} value={option}>
             {option}
           </option>
         ))}
-      </select>
+      </SelectField>
     </div>
   );
 }

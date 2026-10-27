@@ -154,3 +154,123 @@ html {
     background: transparent;
   }
 }
+
+/* Dropdowns (SelectField). Closed state for every browser: no native arrow (the chevron is an
+   icon), room for it on the right, and the chevron flips while the list is open. */
+.select-field select {
+  appearance: none;
+  padding-right: 1.75rem;
+  cursor: pointer;
+}
+
+.select-field-chevron {
+  transition: rotate 150ms ease-out;
+}
+
+/* Rotate only: Tailwind centres the chevron with the separate `translate` property. */
+.select-field:has(select:open) .select-field-chevron {
+  rotate: 180deg;
+}
+
+/* Browsers with customizable selects (Chrome and Edge 135+) and a mouse also get a styled option
+   list that unfolds downward from the select. Others, including phones and tablets (whose native
+   picker is easier to use), keep the browser's own list. */
+@media (hover: hover) and (pointer: fine) {
+  @supports (appearance: base-select) {
+    .select-field select,
+    .select-field select::picker(select) {
+      appearance: base-select;
+    }
+
+    .select-field select {
+      display: flex;
+      align-items: center;
+    }
+
+    .select-field select:open {
+      border-color: var(--theme-focus);
+    }
+
+    .select-field select::picker-icon {
+      display: none;
+    }
+
+    .select-field select::picker(select) {
+      /* The default picks whichever side has more room, which is nearly always above. Open below
+         and flip up only when the list does not fit. */
+      position-try-order: normal;
+      position-try-fallbacks: flip-block;
+      /* No squeezing to fit: a list that does not fit below must flip above instead. */
+      max-block-size: none;
+      min-inline-size: anchor-size(self-inline);
+      inline-size: max-content;
+      margin-top: 0.25rem;
+      padding: 0.25rem;
+      border: 1px solid var(--theme-border-strong);
+      border-radius: 0.75rem;
+      background: var(--theme-surface);
+      color: var(--theme-content);
+      box-shadow: 0 14px 30px -14px var(--theme-shadow);
+      /* Closed: collapsed onto the select's bottom edge. The negative insets keep the shadow. */
+      opacity: 0;
+      clip-path: inset(0 -2rem 100% -2rem);
+      transition:
+        opacity 100ms ease-out,
+        clip-path 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        display 200ms allow-discrete,
+        overlay 200ms allow-discrete;
+    }
+
+    .select-field select:open::picker(select) {
+      opacity: 1;
+      clip-path: inset(0 -2rem -2rem -2rem);
+    }
+
+    @starting-style {
+      .select-field select:open::picker(select) {
+        opacity: 0;
+        clip-path: inset(0 -2rem 100% -2rem);
+      }
+    }
+
+    .select-field option {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.4375rem 0.625rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    .select-field option[data-glyph]::before {
+      content: attr(data-glyph);
+      min-width: 2rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.75rem;
+      color: var(--theme-content-muted);
+    }
+
+    .select-field option:hover,
+    .select-field option:focus-visible {
+      background: color-mix(in srgb, var(--theme-action) 15%, transparent);
+      outline: none;
+    }
+
+    .select-field option:checked {
+      font-weight: 600;
+    }
+
+    .select-field option::checkmark {
+      order: 1;
+      margin-left: auto;
+      color: var(--theme-action);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .select-field select::picker(select) {
+        transition: none;
+      }
+    }
+  }
+}
