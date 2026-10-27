@@ -2,7 +2,7 @@ import { TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { GenerationState } from '../../../lib/generation';
 import { getResultsTabId, RESULTS_VIEW_PANEL_ID, type ResultsView } from '../result-utils';
-import { ExportActions } from './ExportActions';
+import { ExportFooter } from './ExportFooter';
 import { JsonEditorView } from './JsonEditorView';
 import { ResultsTable } from './ResultsTable';
 import { ResultsViewToggle } from './ResultsViewToggle';
@@ -38,9 +38,19 @@ function ResultsPanel({ state }: ResultsPanelProps) {
       className="flex flex-1 flex-col lg:min-h-0"
     >
       <div className="flex min-h-11 items-center justify-between gap-3">
-        <h2 id="results-heading" className="text-lg font-semibold text-content">
-          Results
-        </h2>
+        <div>
+          <h2 id="results-heading" className="text-lg font-semibold leading-6 text-content">
+            Results
+          </h2>
+          {/* Always rendered so the title keeps its place in every state. */}
+          <p className="h-4 text-xs leading-4 text-content-muted" role="status">
+            {state.status === 'success'
+              ? `${state.result.records.length} ${
+                  state.result.records.length === 1 ? 'record' : 'records'
+                } generated.`
+              : ''}
+          </p>
+        </div>
         {/* The toggle shows on success only; the row keeps its height in every state. */}
         {state.status === 'success' && <ResultsViewToggle view={view} onChange={setView} />}
       </div>
@@ -97,12 +107,7 @@ function ResultsPanel({ state }: ResultsPanelProps) {
       )}
 
       {state.status === 'success' && (
-        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-5">
-          <p className="text-sm text-content-muted" role="status">
-            {state.result.records.length} {state.result.records.length === 1 ? 'record' : 'records'}{' '}
-            generated.
-          </p>
-          <ExportActions columns={state.columns} records={state.result.records} />
+        <div className="mt-2 flex min-h-0 flex-1 flex-col gap-4">
           <div
             aria-labelledby={getResultsTabId(view)}
             className="flex min-h-0 flex-col lg:flex-1"
@@ -115,6 +120,7 @@ function ResultsPanel({ state }: ResultsPanelProps) {
               <JsonEditorView columns={state.columns} records={state.result.records} />
             )}
           </div>
+          <ExportFooter columns={state.columns} records={state.result.records} />
         </div>
       )}
     </section>

@@ -70,10 +70,6 @@ function ResultsTable({ columns, records }: ResultsTableProps) {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 flex-none text-xs text-content-muted">
-        <span className="font-mono">null</span> marks a missing value; <span className="font-mono">""</span>{' '}
-        is an empty string.
-      </p>
     </div>
   );
 }

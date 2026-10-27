@@ -112,9 +112,6 @@ function JsonEditorView({ columns, records }: JsonEditorViewProps) {
           </div>
         </div>
       </div>
-      <p className="mt-3 flex-none text-xs text-content-muted">
-        This is the file <span className="font-mono">Download JSON</span> saves.
-      </p>
     </div>
   );
 }

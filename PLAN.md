@@ -66,7 +66,7 @@ CSV has no universal null type, so define a stable export convention:
 - Numbers and booleans are emitted unquoted.
 - Quotes in strings are doubled under standard CSV escaping.
 
-For example, a nullable `nickname` of `null` exports as an empty field, while `""` exports as `""`. Document this convention beside the CSV download action. Also note there that spreadsheet applications may interpret generated strings beginning with `=`, `+`, `-`, or `@` as formulas; values are exported unchanged so the mock data is not altered.
+For example, a nullable `nickname` of `null` exports as an empty field, while `""` exports as `""`. Document this convention in the results view next to the download actions (an export footer below the preview: each download button above its notes). Also note there that spreadsheet applications may interpret generated strings beginning with `=`, `+`, `-`, or `@` as formulas; values are exported unchanged so the mock data is not altered.
 
 ## Architecture, local development, and bounded public usage
 
@@ -133,7 +133,7 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Editor is a read-only, line-numbered, syntax-coloured view of `toJson` output (identical to the JSON download) with a Copy button; colours use existing semantic tokens.
    - Lucide icons; Motion for the pour moment and toggle indicator, respecting reduced motion. No changes to generation, validation, export logic or state ownership.
    - Decisions: the toggle is a compact segmented control in the results header on every width (the header keeps its 44px height in every state); the pour line runs along the pane seam at lg and across the Generate bar when stacked; Copy lives in the Editor's file tab; the Editor does not wrap lines.
-   - Acceptance: request and results are both visible at lg; 50 records × 8 fields scroll inside their view in both Table and Editor without breaking layout at 375px or 1440px; Editor text equals the JSON download; the toggle works by keyboard with a visible selected state; every results state reads well in both palettes; CSV notes stay beside the CSV button.
+   - Acceptance: request and results are both visible at lg; 50 records × 8 fields scroll inside their view in both Table and Editor without breaking layout at 375px or 1440px; Editor text equals the JSON download; the toggle works by keyboard with a visible selected state; every results state reads well in both palettes; the CSV null convention and formula note stay visible in the results view next to the downloads (export footer below the preview, amended in 2c).
    - Checks: lint, build, tests (tokenizer, theme helpers), browser check per step in both palettes and with reduced motion.
 
 3. **Server generation contract** — ⏳ not started
