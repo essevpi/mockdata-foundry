@@ -1,8 +1,6 @@
 import type { ValidationIssue } from '../../../lib/generation';
 import { FIELD_PROBLEMS_ID, type FieldDraft, type FieldProblem } from '../field-utils';
-import type { MockOutcome } from '../../../lib/mock-generator';
 import { FieldProblems } from './FieldProblems';
-import { MockOutcomeControl } from './MockOutcomeControl';
 import { PourLine } from './PourLine';
 
 type GenerateBarProps = {
@@ -11,9 +9,7 @@ type GenerateBarProps = {
   fields: FieldDraft[];
   isLoading: boolean;
   isValid: boolean;
-  mockOutcome: MockOutcome;
   requestIssues: ValidationIssue[];
-  onMockOutcomeChange: (outcome: MockOutcome) => void;
 };
 
 function GenerateBar({
@@ -22,9 +18,7 @@ function GenerateBar({
   fields,
   isLoading,
   isValid,
-  mockOutcome,
   requestIssues,
-  onMockOutcomeChange,
 }: GenerateBarProps) {
   const hasFieldProblems = fieldIssues.length > 0 || fieldProblems.length > 0;
 
@@ -38,9 +32,6 @@ function GenerateBar({
             <p id="generate-hint" className="text-xs leading-5 text-content-muted">
               Add a description and a valid field.
             </p>
-          )}
-          {import.meta.env.DEV && (
-            <MockOutcomeControl outcome={mockOutcome} onChange={onMockOutcomeChange} />
           )}
         </div>
         <button

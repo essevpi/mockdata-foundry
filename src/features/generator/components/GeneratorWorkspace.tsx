@@ -18,6 +18,7 @@ import {
   type TouchedSection,
 } from '../field-utils';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
+import { DevTools } from './DevTools';
 import { FieldBuilderPanel } from './FieldBuilderPanel';
 import { GenerateBar } from './GenerateBar';
 import { PourLine } from './PourLine';
@@ -148,11 +149,10 @@ function GeneratorWorkspace() {
           fields={fields}
           isLoading={isLoading}
           isValid={requestValidation.valid}
-          mockOutcome={mockOutcome}
           requestIssues={getIssues('request')}
-          onMockOutcomeChange={setMockOutcome}
         />
       </form>
+      {import.meta.env.DEV && <DevTools outcome={mockOutcome} onOutcomeChange={setMockOutcome} />}
       <PourLine active={isLoading} axis="y" className="inset-y-0 left-1/2 -ml-0.5 hidden w-0.5 lg:block" />
       <div className="flex min-w-0 flex-col border-t border-border-strong bg-surface p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:border-t-0 lg:bg-transparent">
         <ResultsPanel state={generation} />
