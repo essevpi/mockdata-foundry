@@ -19,6 +19,7 @@ import {
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
 import { FieldBuilderPanel } from './FieldBuilderPanel';
 import { GenerateBar } from './GenerateBar';
+import { PourLine } from './PourLine';
 import { ResultsPanel } from './ResultsPanel';
 
 function GeneratorWorkspace() {
@@ -109,7 +110,7 @@ function GeneratorWorkspace() {
   }
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col lg:grid lg:min-h-0 lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]">
+    <div className="relative flex min-w-0 flex-1 flex-col lg:grid lg:min-h-0 lg:grid-cols-2 lg:grid-rows-[minmax(0,1fr)]">
       {/* Below lg the form is display: contents so the sticky Generate bar's containing block is
           the whole stacked workspace and it stays visible over the results too. */}
       <form
@@ -146,6 +147,7 @@ function GeneratorWorkspace() {
           onMockOutcomeChange={setMockOutcome}
         />
       </form>
+      <PourLine active={isLoading} axis="y" className="inset-y-0 left-1/2 -ml-0.5 hidden w-0.5 lg:block" />
       <div className="flex min-w-0 flex-col p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto">
         <ResultsPanel state={generation} />
       </div>

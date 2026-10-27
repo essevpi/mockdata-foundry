@@ -1,4 +1,5 @@
 import { Braces, Table2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useRef, type KeyboardEvent } from 'react';
 import {
   getNextResultsView,
@@ -50,10 +51,10 @@ function ResultsViewToggle({ view, onChange }: ResultsViewToggleProps) {
             }}
             aria-controls={RESULTS_VIEW_PANEL_ID}
             aria-selected={selected}
-            className={`relative flex items-center gap-2 rounded-[10px] px-3.5 text-sm transition-colors after:absolute after:inset-x-3 after:bottom-0.5 after:h-0.5 after:rounded-full ${
+            className={`relative flex items-center rounded-[10px] px-3.5 text-sm transition-colors ${
               selected
-                ? 'bg-surface-raised font-semibold text-content after:bg-action'
-                : 'font-medium text-content-muted after:bg-transparent hover:text-content'
+                ? 'font-semibold text-content'
+                : 'font-medium text-content-muted hover:text-content'
             }`}
             id={getResultsTabId(tabView)}
             onClick={() => onChange(tabView)}
@@ -61,8 +62,18 @@ function ResultsViewToggle({ view, onChange }: ResultsViewToggleProps) {
             tabIndex={selected ? 0 : -1}
             type="button"
           >
-            <Icon aria-hidden="true" className="size-4" />
-            {label}
+            {selected && (
+              <motion.span
+                aria-hidden="true"
+                className="absolute inset-0 rounded-[10px] bg-surface-raised after:absolute after:inset-x-3 after:bottom-0.5 after:h-0.5 after:rounded-full after:bg-action"
+                layoutId="results-view-indicator"
+                transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+              />
+            )}
+            <span className="relative flex items-center gap-2">
+              <Icon aria-hidden="true" className="size-4" />
+              {label}
+            </span>
           </button>
         );
       })}

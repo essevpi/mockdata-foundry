@@ -8,11 +8,11 @@ When a change affects the commands, project layout, conventions or dependency ru
 
 ## Stack
 
-React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. Approved UI libraries, to be installed only when a task uses them: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. Neither is integrated yet: treat both as plans until the server function and integrations are added (progress in `PLAN.md`).
+React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. Neither is integrated yet: treat both as plans until the server function and integrations are added (progress in `PLAN.md`).
 
 ## Project Layout
 
-- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form, generation state and the two-pane layout; `GenerateBar.tsx` holds the submit button, request issues and the dev mock control; `ResultsPanel.tsx` renders the idle/loading/error/success states and owns the Table/Editor view choice, using `ResultsViewToggle.tsx`, `ResultsTable.tsx` or `JsonEditorView.tsx` (JSON from `toJson`), and `ExportActions.tsx` on success; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes.
+- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form, generation state and the two-pane layout; `GenerateBar.tsx` holds the submit button, request issues and the dev mock control; `PourLine.tsx` is the gold loading line along the pane seam; `ResultsPanel.tsx` renders the idle/loading/error/success states and owns the Table/Editor view choice, using `ResultsViewToggle.tsx`, `ResultsTable.tsx` or `JsonEditorView.tsx` (JSON from `toJson`), and `ExportActions.tsx` on success; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes.
 - `src/features/generator/field-utils.ts`: field drafts with stable ids, request building, issue visibility, record-count stepping
 - `src/features/generator/result-utils.ts`: cell display formatting and results view helpers
 - `src/features/generator/json-tokens.ts`: splits JSON export text into typed tokens per line (for the Editor view)
@@ -58,4 +58,4 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 - Keep LLM provider credentials server-side; never expose secrets in browser code or commit them.
 - Before implementing a provider integration, check the current provider documentation for API behavior, authentication and supported models.
 - Treat LLM output as untrusted: validate provider responses against the contract in `PLAN.md` with hand-written checks before they reach the UI.
-- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). Approved additions: `lucide-react` and `motion` (UI) and the Vercel CLI (development); add each only when a task needs it. No other new dependencies.
+- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The only approved addition still to come is the Vercel CLI (development); add it only when a task needs it. No other new dependencies.

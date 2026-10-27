@@ -127,11 +127,12 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Acceptance: every ResultsPanel state, the form and the field builder read well in both palettes; text meets 4.5:1 and control boundaries and focus 3:1 against adjacent surfaces.
    - Follow-up, ✅ done in 2b: a light/dark toggle that sets `data-theme` on `<html>` and remembers the choice in `localStorage`; an inline script in `index.html` applies it before first paint.
 
-2b. **Layout refresh (split workbench)** — ⏳ not started
+2b. **Layout refresh (split workbench)** — ✅ done
    - Two-pane workbench: request (description, records, fields, Generate) beside results at lg and above, each pane scrolling within a viewport-height page; stacked below lg with a sticky Generate bar. The header holds the theme toggle (2a follow-up).
    - Results offer Table and Editor views via an accessible tab toggle shown only on success; the header keeps its height in every state. The choice persists until reload.
    - Editor is a read-only, line-numbered, syntax-coloured view of `toJson` output (identical to the JSON download) with a Copy button; colours use existing semantic tokens.
    - Lucide icons; Motion for the pour moment and toggle indicator, respecting reduced motion. No changes to generation, validation, export logic or state ownership.
+   - Decisions: the toggle is a compact segmented control in the results header on every width (the header keeps its 44px height in every state); the pour line runs along the pane seam at lg and across the Generate bar when stacked; Copy lives in the Editor's file tab; the Editor does not wrap lines.
    - Acceptance: request and results are both visible at lg; 50 records × 8 fields scroll inside their view in both Table and Editor without breaking layout at 375px or 1440px; Editor text equals the JSON download; the toggle works by keyboard with a visible selected state; every results state reads well in both palettes; CSV notes stay beside the CSV button.
    - Checks: lint, build, tests (tokenizer, theme helpers), browser check per step in both palettes and with reduced motion.
 
@@ -157,5 +158,5 @@ Not part of the MVP; recorded so they are not lost.
 
 - Confirm the target Groq account can apply the proposed 100-request/day project cap and supports the required output-token budget on its current tier.
 - Confirm Vercel Firewall rate limiting is available and acceptable for the target Vercel plan before exposing the endpoint publicly.
-- Approve the Vercel CLI (to run and test the root-level Vercel Function locally) as the only new development dependency still to be added; Vitest is already installed. `lucide-react` and `motion` are the approved runtime UI dependencies, added only when a task uses them.
+- Approve the Vercel CLI (to run and test the root-level Vercel Function locally) as the only new development dependency still to be added; Vitest is already installed. `lucide-react` and `motion` are installed.
 - After the Milestone 3 smoke test, revisit whether the 8-field limit and the 2-requests-per-10-minutes firewall rule suit a portfolio demo; neither is changed yet.
