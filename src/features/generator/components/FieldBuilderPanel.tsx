@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
+import { FIELD_ROW_COLUMNS, FIELD_ROW_GAP } from '../field-row-layout';
 import { ADD_FIELD_BUTTON_ID, getFieldValidationIssues, type FieldDraft } from '../field-utils';
 import { FieldEditor } from './FieldEditor';
 
@@ -55,19 +56,30 @@ function FieldBuilderPanel({
           </p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
-          {fields.map((field, index) => (
-            <li key={field.id}>
-              <FieldEditor
-                field={field}
-                index={index}
-                issues={getFieldValidationIssues(validationIssues, index)}
-                onRemove={() => onRemoveField(index)}
-                onUpdate={(updates) => onUpdateField(index, updates)}
-              />
-            </li>
-          ))}
-        </ul>
+        <div className="@container mt-6 overflow-hidden rounded-xl border border-border bg-surface-inset">
+          <div
+            aria-hidden="true"
+            className={`hidden border-b border-border px-3 py-2 text-xs font-medium text-content-muted @xl:grid ${FIELD_ROW_GAP} ${FIELD_ROW_COLUMNS}`}
+          >
+            <span />
+            <span>Field name</span>
+            <span>Type</span>
+            <span className="text-center">Nullable</span>
+          </div>
+          <ul className="divide-y divide-border">
+            {fields.map((field, index) => (
+              <li key={field.id}>
+                <FieldEditor
+                  field={field}
+                  index={index}
+                  issues={getFieldValidationIssues(validationIssues, index)}
+                  onRemove={() => onRemoveField(index)}
+                  onUpdate={(updates) => onUpdateField(index, updates)}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       {fieldsIssues.map((issue) => (
@@ -76,9 +88,14 @@ function FieldBuilderPanel({
         </p>
       ))}
 
-      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="min-w-0 text-xs leading-5 text-content-muted">
+          {atFieldLimit
+            ? `You can include up to ${REQUEST_LIMITS.fieldsMaxCount} fields in one dataset.`
+            : 'Use clear names such as customerName or invoice_total.'}
+        </p>
         <button
-          className="flex items-center gap-2 rounded-xl border border-border-strong bg-surface-raised px-5 py-2.5 text-sm font-semibold text-content transition hover:border-action hover:text-action disabled:cursor-not-allowed disabled:border-border disabled:bg-surface disabled:text-content-muted/60"
+          className="flex h-10 shrink-0 items-center gap-2 rounded-xl border border-border-strong bg-surface-raised px-4 text-sm font-semibold text-content transition hover:border-action hover:bg-action/10 hover:text-action disabled:cursor-not-allowed disabled:border-border disabled:bg-surface disabled:text-content-muted/60"
           disabled={atFieldLimit}
           id={ADD_FIELD_BUTTON_ID}
           onClick={onAddField}
@@ -87,11 +104,6 @@ function FieldBuilderPanel({
           <Plus aria-hidden="true" className="size-4" />
           {fields.length === 0 ? 'Add your first field' : 'Add field'}
         </button>
-        <p className="text-xs leading-5 text-content-muted">
-          {atFieldLimit
-            ? `You can include up to ${REQUEST_LIMITS.fieldsMaxCount} fields in one dataset.`
-            : 'Use clear names such as customerName or invoice_total.'}
-        </p>
       </div>
     </section>
   );

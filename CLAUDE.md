@@ -14,6 +14,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-re
 
 - `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form, generation state and the two-pane layout; `GenerateBar.tsx` holds the submit button, request issues and the dev mock control; `PourLine.tsx` is the gold loading line along the pane seam; `ResultsPanel.tsx` renders the idle/loading/error/success states and owns the Table/Editor view choice, using `ResultsViewToggle.tsx`, `ResultsTable.tsx` or `JsonEditorView.tsx` (JSON from `toJson`), `ExportFooter.tsx` (download buttons with their null/CSV/formula notes) on success; `MockOutcomeControl.tsx` is a dev-only picker for forcing mock outcomes.
 - `src/features/generator/field-utils.ts`: field drafts with stable ids, request building, issue visibility, record-count stepping
+- `src/features/generator/field-row-layout.ts`: grid template shared by the field list header and its rows
 - `src/features/generator/result-utils.ts`: cell display formatting and results view helpers
 - `src/features/generator/json-tokens.ts`: splits JSON export text into typed tokens per line (for the Editor view)
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation
