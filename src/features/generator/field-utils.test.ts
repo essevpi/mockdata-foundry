@@ -4,11 +4,15 @@ import {
   ADD_FIELD_BUTTON_ID,
   canStepRecordCount,
   createFieldDraft,
+  formatFieldProblem,
+  formatFieldReference,
   getFieldInputId,
   getFocusTargetIdAfterRemoval,
+  getInvalidFieldIndexes,
   getNextFieldName,
   getVisibleIssues,
   stepRecordCount,
+  summarizeFieldIssues,
   type FieldDraft,
   type TouchedSection,
 } from './field-utils';
@@ -125,5 +129,72 @@ describe('canStepRecordCount', () => {
   it('allows stepping from empty or invalid text', () => {
     expect(canStepRecordCount('', 1)).toBe(true);
     expect(canStepRecordCount('abc', -1)).toBe(true);
+  });
+});
+
+describe('summarizeFieldIssues', () => {
+  const duplicate = (index: number) => ({
+    field: `fields[${index}].name`,
+    message: 'Field names must be unique.',
+  });
+
+  it('includes the first field that shares a name, which validation does not flag', () => {
+    const fields = [{ name: 'a' }, { name: 'a' }, { name: 'b' }];
+
+    expect(summarizeFieldIssues([duplicate(1)], fields)).toEqual([
+      { message: 'Field names must be unique.', fieldNumbers: [1, 2] },
+    ]);
+  });
+
+  it('lists every field in a group of three duplicates, in order', () => {
+    const fields = [{ name: 'a' }, { name: 'a' }, { name: 'a' }];
+
+    expect(summarizeFieldIssues([duplicate(2), duplicate(1)], fields)[0].fieldNumbers).toEqual([
+      1, 2, 3,
+    ]);
+  });
+
+  it('groups different problems separately and ignores non-field issues', () => {
+    const fields = [{ name: '1x' }, { name: '' }, { name: 'ok' }];
+    const issues = [
+      { field: 'description', message: 'Description is required.' },
+      { field: 'fields[0].name', message: 'Field name must start with a letter.' },
+      { field: 'fields[1].name', message: 'Field name must start with a letter.' },
+      { field: 'fields[1].name', message: 'Field name must be 1–40 characters.' },
+    ];
+
+    expect(summarizeFieldIssues(issues, fields)).toEqual([
+      { message: 'Field name must start with a letter.', fieldNumbers: [1, 2] },
+      { message: 'Field name must be 1–40 characters.', fieldNumbers: [2] },
+    ]);
+  });
+
+  it('returns nothing when there are no field issues', () => {
+    expect(summarizeFieldIssues([], [{ name: 'a' }])).toEqual([]);
+  });
+});
+
+describe('formatFieldReference and formatFieldProblem', () => {
+  it('joins field numbers naturally', () => {
+    expect(formatFieldReference([3])).toBe('Field 3');
+    expect(formatFieldReference([1, 2])).toBe('Field 1 and Field 2');
+    expect(formatFieldReference([1, 2, 4])).toBe('Field 1, Field 2 and Field 4');
+  });
+
+  it('builds one sentence per problem', () => {
+    expect(
+      formatFieldProblem({ message: 'Field names must be unique.', fieldNumbers: [1, 2] }),
+    ).toBe('Field names must be unique (Field 1 and Field 2).');
+  });
+});
+
+describe('getInvalidFieldIndexes', () => {
+  it('returns zero-based indexes of every named field', () => {
+    const problems = [
+      { message: 'a', fieldNumbers: [1, 2] },
+      { message: 'b', fieldNumbers: [2, 4] },
+    ];
+
+    expect([...getInvalidFieldIndexes(problems)].sort()).toEqual([0, 1, 3]);
   });
 });

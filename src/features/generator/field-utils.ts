@@ -1,4 +1,5 @@
 import {
+  DUPLICATE_FIELD_NAME_MESSAGE,
   REQUEST_LIMITS,
   type FieldDefinition,
   type GenerateRequest,
@@ -17,6 +18,7 @@ export type FieldValidationIssues = {
 };
 
 export const ADD_FIELD_BUTTON_ID = 'add-field-button';
+export const FIELD_PROBLEMS_ID = 'field-problems';
 
 let nextFieldId = 0;
 
@@ -116,4 +118,75 @@ export function getFieldValidationIssues(
     nullable: validationIssues.filter((issue) => issue.field === `${fieldPath}.nullable`),
     guidance: validationIssues.filter((issue) => issue.field === `${fieldPath}.guidance`),
   };
+}
+
+export type FieldProblem = {
+  message: string;
+  // 1-based field numbers, in ascending order.
+  fieldNumbers: number[];
+};
+
+const FIELD_ISSUE_PATH = /^fields\[(\d+)\]\./;
+
+// Groups per-field validation issues by message so the builder can show one shared message per
+// problem. Validation only flags the second and later fields that share a name, so for the
+// duplicate-name message every field with that name is included.
+export function summarizeFieldIssues(
+  issues: ValidationIssue[],
+  fields: Array<Pick<FieldDefinition, 'name'>>,
+): FieldProblem[] {
+  const numbersByMessage = new Map<string, Set<number>>();
+
+  for (const issue of issues) {
+    const match = FIELD_ISSUE_PATH.exec(issue.field);
+
+    if (!match) {
+      continue;
+    }
+
+    const numbers = numbersByMessage.get(issue.message) ?? new Set<number>();
+
+    numbers.add(Number(match[1]) + 1);
+    numbersByMessage.set(issue.message, numbers);
+  }
+
+  const duplicateNumbers = numbersByMessage.get(DUPLICATE_FIELD_NAME_MESSAGE);
+
+  if (duplicateNumbers) {
+    const duplicateNames = new Set(
+      [...duplicateNumbers].map((fieldNumber) => fields[fieldNumber - 1]?.name),
+    );
+
+    fields.forEach((field, index) => {
+      if (duplicateNames.has(field.name)) {
+        duplicateNumbers.add(index + 1);
+      }
+    });
+  }
+
+  return [...numbersByMessage].map(([message, numbers]) => ({
+    message,
+    fieldNumbers: [...numbers].sort((a, b) => a - b),
+  }));
+}
+
+// "Field 1", "Field 1 and Field 2", "Field 1, Field 2 and Field 4".
+export function formatFieldReference(fieldNumbers: number[]): string {
+  const labels = fieldNumbers.map((fieldNumber) => `Field ${fieldNumber}`);
+
+  if (labels.length <= 1) {
+    return labels.join('');
+  }
+
+  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
+}
+
+// One shared sentence per problem, for example "Field names must be unique (Field 1 and Field 2)."
+export function formatFieldProblem(problem: FieldProblem): string {
+  return `${problem.message.replace(/\.$/, '')} (${formatFieldReference(problem.fieldNumbers)}).`;
+}
+
+// Zero-based indexes of every field named in a problem, for highlighting rows.
+export function getInvalidFieldIndexes(problems: FieldProblem[]): Set<number> {
+  return new Set(problems.flatMap((problem) => problem.fieldNumbers.map((number) => number - 1)));
 }

@@ -1,11 +1,6 @@
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import {
-  FIELD_TYPES,
-  REQUEST_LIMITS,
-  type FieldType,
-  type ValidationIssue,
-} from '../../../lib/generation';
+import { FIELD_TYPES, REQUEST_LIMITS, type FieldType } from '../../../lib/generation';
 import { getFieldInputId, type FieldDraft, type FieldValidationIssues } from '../field-utils';
 import { FIELD_ROW_COLUMNS, FIELD_ROW_GAP } from '../field-row-layout';
 
@@ -25,22 +20,24 @@ const labelClassName = 'sr-only';
 type FieldEditorProps = {
   field: FieldDraft;
   index: number;
+  invalid: boolean;
   issues: FieldValidationIssues;
+  problemsId: string;
   onRemove: () => void;
   onUpdate: (updates: Partial<FieldDraft>) => void;
 };
 
-function FieldIssues({ issues }: { issues: ValidationIssue[] }) {
-  return issues.map((issue) => (
-    <p key={issue.message} className="mt-1.5 text-xs leading-5 text-danger">
-      {issue.message}
-    </p>
-  ));
-}
-
 // One field as a row. The list container (see FieldBuilderPanel) is the query container: wide
 // rows fit on one line, narrow ones wrap to name + type, then nullable / guidance / remove.
-function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorProps) {
+function FieldEditor({
+  field,
+  index,
+  invalid,
+  issues,
+  problemsId,
+  onRemove,
+  onUpdate,
+}: FieldEditorProps) {
   const nameInputId = getFieldInputId(field.id, 'name');
   const typeInputId = getFieldInputId(field.id, 'type');
   const guidanceInputId = getFieldInputId(field.id, 'guidance');
@@ -55,7 +52,12 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
   }
 
   return (
-    <fieldset className="px-3 py-3 @xl:py-2">
+    <fieldset
+      aria-describedby={invalid ? problemsId : undefined}
+      className={`px-3 py-3 @xl:py-2 ${
+        invalid ? 'bg-danger/8 shadow-[inset_3px_0_0_var(--theme-danger)]' : ''
+      }`}
+    >
       <legend className="sr-only">Field {index + 1}</legend>
 
       <div
@@ -81,7 +83,6 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
             aria-invalid={issues.name.length > 0}
             className={inputClassName}
           />
-          <FieldIssues issues={issues.name} />
         </div>
 
         <div>
@@ -101,7 +102,6 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
               </option>
             ))}
           </select>
-          <FieldIssues issues={issues.type} />
         </div>
 
         {/* Wide rows: this wrapper disappears and its children become cells of the row grid. */}
@@ -120,7 +120,6 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
               />
               <span className="@xl:sr-only">Nullable</span>
             </label>
-            <FieldIssues issues={issues.nullable} />
           </div>
 
           <button
@@ -171,7 +170,6 @@ function FieldEditor({ field, index, issues, onRemove, onUpdate }: FieldEditorPr
                 aria-invalid={issues.guidance.length > 0}
                 className={inputClassName}
               />
-              <FieldIssues issues={issues.guidance} />
             </div>
           )}
         </div>

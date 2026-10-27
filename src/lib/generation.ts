@@ -14,6 +14,8 @@ export const REQUEST_LIMITS = {
 
 const fieldNamePattern = /^[A-Za-z][A-Za-z0-9_]*$/;
 
+export const DUPLICATE_FIELD_NAME_MESSAGE = 'Field names must be unique.';
+
 export type FieldType = (typeof FIELD_TYPES)[number];
 
 export type FieldDefinition = {
@@ -137,7 +139,7 @@ function validateField(
     }
 
     if (names.has(name)) {
-      issues.push({ field: `${fieldPath}.name`, message: 'Field names must be unique.' });
+      issues.push({ field: `${fieldPath}.name`, message: DUPLICATE_FIELD_NAME_MESSAGE });
     } else {
       names.add(name);
     }

@@ -1,12 +1,19 @@
 import { Plus } from 'lucide-react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import { FIELD_ROW_COLUMNS, FIELD_ROW_GAP } from '../field-row-layout';
-import { ADD_FIELD_BUTTON_ID, getFieldValidationIssues, type FieldDraft } from '../field-utils';
+import {
+  ADD_FIELD_BUTTON_ID,
+  FIELD_PROBLEMS_ID,
+  getFieldValidationIssues,
+  getInvalidFieldIndexes,
+  type FieldDraft,
+  type FieldProblem,
+} from '../field-utils';
 import { FieldEditor } from './FieldEditor';
 
 type FieldBuilderPanelProps = {
   fields: FieldDraft[];
-  fieldsIssues: ValidationIssue[];
+  problems: FieldProblem[];
   validationIssues: ValidationIssue[];
   onAddField: () => void;
   onRemoveField: (index: number) => void;
@@ -15,13 +22,14 @@ type FieldBuilderPanelProps = {
 
 function FieldBuilderPanel({
   fields,
-  fieldsIssues,
+  problems,
   validationIssues,
   onAddField,
   onRemoveField,
   onUpdateField,
 }: FieldBuilderPanelProps) {
   const atFieldLimit = fields.length >= REQUEST_LIMITS.fieldsMaxCount;
+  const invalidIndexes = getInvalidFieldIndexes(problems);
 
   return (
     <section
@@ -72,6 +80,8 @@ function FieldBuilderPanel({
                 <FieldEditor
                   field={field}
                   index={index}
+                  invalid={invalidIndexes.has(index)}
+                  problemsId={FIELD_PROBLEMS_ID}
                   issues={getFieldValidationIssues(validationIssues, index)}
                   onRemove={() => onRemoveField(index)}
                   onUpdate={(updates) => onUpdateField(index, updates)}
@@ -81,12 +91,6 @@ function FieldBuilderPanel({
           </ul>
         </div>
       )}
-
-      {fieldsIssues.map((issue) => (
-        <p key={issue.message} className="mt-3 text-xs text-danger">
-          {issue.message}
-        </p>
-      ))}
 
       <div className="mt-3 flex items-center justify-between gap-3">
         <p className="min-w-0 text-xs leading-5 text-content-muted">

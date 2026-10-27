@@ -13,6 +13,7 @@ import {
   createFieldDraft,
   getFocusTargetIdAfterRemoval,
   getVisibleIssues,
+  summarizeFieldIssues,
   type FieldDraft,
   type TouchedSection,
 } from '../field-utils';
@@ -36,6 +37,8 @@ function GeneratorWorkspace() {
   const validationIssues = requestValidation.valid
     ? []
     : getVisibleIssues(requestValidation.issues, touched);
+
+  const fieldProblems = summarizeFieldIssues(validationIssues, fields);
 
   function getIssues(field: string): ValidationIssue[] {
     return validationIssues.filter((issue) => issue.field === field);
@@ -132,7 +135,7 @@ function GeneratorWorkspace() {
           />
           <FieldBuilderPanel
             fields={fields}
-            fieldsIssues={getIssues('fields')}
+            problems={fieldProblems}
             validationIssues={validationIssues}
             onAddField={addField}
             onRemoveField={removeField}
@@ -140,6 +143,9 @@ function GeneratorWorkspace() {
           />
         </div>
         <GenerateBar
+          fieldIssues={getIssues('fields')}
+          fieldProblems={fieldProblems}
+          fields={fields}
           isLoading={isLoading}
           isValid={requestValidation.valid}
           mockOutcome={mockOutcome}
