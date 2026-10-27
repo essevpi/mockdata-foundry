@@ -148,7 +148,7 @@ function GeneratorWorkspace() {
         />
       </form>
       <PourLine active={isLoading} axis="y" className="inset-y-0 left-1/2 -ml-0.5 hidden w-0.5 lg:block" />
-      <div className="flex min-w-0 flex-col p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto">
+      <div className="flex min-w-0 flex-col border-t border-border-strong bg-surface p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:border-t-0 lg:bg-transparent">
         <ResultsPanel state={generation} />
       </div>
     </div>

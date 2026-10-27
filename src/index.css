@@ -88,6 +88,12 @@ textarea {
   scrollbar-color: var(--theme-border-strong) transparent;
 }
 
+/* The page scrollbar track matches the sticky Generate bar, so the bar reads edge to edge when
+   the panes stack. */
+html {
+  scrollbar-color: var(--theme-border-strong) var(--theme-surface);
+}
+
 ::selection {
   background: color-mix(in srgb, var(--theme-focus) 35%, transparent);
 }

@@ -7,15 +7,15 @@ type MockOutcomeControlProps = {
 
 function MockOutcomeControl({ outcome, onChange }: MockOutcomeControlProps) {
   return (
-    <div className="mt-4 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-content-muted">
+    <div title="Mock outcome (development only)" className="flex items-center gap-2 text-xs text-content-muted">
       <label htmlFor="mock-outcome" className="font-medium text-content">
-        Dev only: mock outcome
+        Mock
       </label>
       <select
         id="mock-outcome"
         value={outcome}
         onChange={(event) => onChange(event.target.value as MockOutcome)}
-        className="ml-2 rounded border border-border-strong bg-input px-2 py-1 text-xs text-content"
+        className="rounded border border-border-strong bg-input px-2 py-1 text-xs! text-content"
       >
         {MOCK_OUTCOMES.map((option) => (
           <option key={option} value={option}>
