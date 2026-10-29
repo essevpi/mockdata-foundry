@@ -1,7 +1,14 @@
 import { Minus, Plus } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
-import { canStepRecordCount, stepRecordCount } from '../field-utils';
+import {
+  canStepRecordCount,
+  formatGenerateShortcut,
+  isGenerateShortcut,
+  stepRecordCount,
+} from '../field-utils';
+
+const GENERATE_SHORTCUT = formatGenerateShortcut(navigator.userAgent);
 
 const stepperButtonClassName =
   'grid size-10.5 place-items-center text-content transition focus-visible:-outline-offset-2 hover:bg-action/15 hover:text-content aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:bg-transparent aria-disabled:hover:text-content-muted/50';
@@ -49,6 +56,8 @@ function DatasetDetailsPanel({
           What should this data represent?
         </label>
         <textarea
+          aria-describedby="description-shortcut"
+          aria-keyshortcuts="Control+Enter Meta+Enter"
           id="description"
           maxLength={REQUEST_LIMITS.descriptionMaxLength}
           name="description"
@@ -57,11 +66,23 @@ function DatasetDetailsPanel({
           value={description}
           onBlur={onDescriptionBlur}
           onChange={(event) => onDescriptionChange(event.target.value)}
+          onKeyDown={(event) => {
+            // Submitting runs the normal Generate path, which ignores invalid or loading states.
+            if (isGenerateShortcut(event) && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              event.currentTarget.form?.requestSubmit();
+            }
+          }}
           className="mt-2 block w-full resize-y rounded-xl border border-border-strong bg-input px-4 py-3 text-sm leading-6 text-content outline-none placeholder:text-content-muted focus:border-focus focus:ring-4 focus:ring-focus/30"
         />
         <div className="mt-2 flex items-center justify-between gap-3">
           <p className="text-xs text-content-muted">
             Up to {REQUEST_LIMITS.descriptionMaxLength.toLocaleString('en-US')} characters
+            {/* Touch keyboards have no shortcut, so the hint is for mouse and keyboard users. */}
+            <span id="description-shortcut" className="pointer-coarse:hidden">
+              {' · '}
+              <kbd className="font-sans">{GENERATE_SHORTCUT}</kbd> to generate
+            </span>
           </p>
           <p className="text-xs tabular-nums text-content-muted">
             {description.length}/{REQUEST_LIMITS.descriptionMaxLength}

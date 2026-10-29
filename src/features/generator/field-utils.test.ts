@@ -7,12 +7,14 @@ import {
   createFieldDraftFromDefinition,
   formatFieldProblem,
   formatFieldReference,
+  formatGenerateShortcut,
   getFieldInputId,
   getFocusTargetIdAfterRemoval,
   getInvalidFieldIndexes,
   getNextFieldName,
   getVisibleIssues,
   isFormBlank,
+  isGenerateShortcut,
   stepRecordCount,
   summarizeFieldIssues,
   type FieldDraft,
@@ -233,5 +235,25 @@ describe('getInvalidFieldIndexes', () => {
     ];
 
     expect([...getInvalidFieldIndexes(problems)].sort()).toEqual([0, 1, 3]);
+  });
+});
+
+describe('isGenerateShortcut', () => {
+  it('accepts Enter with Ctrl or Cmd', () => {
+    expect(isGenerateShortcut({ key: 'Enter', ctrlKey: true, metaKey: false })).toBe(true);
+    expect(isGenerateShortcut({ key: 'Enter', ctrlKey: false, metaKey: true })).toBe(true);
+  });
+
+  it('ignores plain Enter and other keys', () => {
+    expect(isGenerateShortcut({ key: 'Enter', ctrlKey: false, metaKey: false })).toBe(false);
+    expect(isGenerateShortcut({ key: 'a', ctrlKey: true, metaKey: false })).toBe(false);
+  });
+});
+
+describe('formatGenerateShortcut', () => {
+  it('uses Cmd on Apple devices and Ctrl elsewhere', () => {
+    expect(formatGenerateShortcut('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)')).toBe('⌘ Enter');
+    expect(formatGenerateShortcut('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)')).toBe('⌘ Enter');
+    expect(formatGenerateShortcut('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe('Ctrl+Enter');
   });
 });

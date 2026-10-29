@@ -204,3 +204,13 @@ export function formatFieldProblem(problem: FieldProblem): string {
 export function getInvalidFieldIndexes(problems: FieldProblem[]): Set<number> {
   return new Set(problems.flatMap((problem) => problem.fieldNumbers.map((number) => number - 1)));
 }
+
+// Ctrl+Enter (Cmd+Enter on Apple devices) generates from the description box.
+export function isGenerateShortcut(event: { key: string; ctrlKey: boolean; metaKey: boolean }) {
+  return event.key === 'Enter' && (event.ctrlKey || event.metaKey);
+}
+
+// The visible hint names the key the user's platform expects.
+export function formatGenerateShortcut(userAgent: string) {
+  return /Mac|iPhone|iPad|iPod/.test(userAgent) ? '⌘ Enter' : 'Ctrl+Enter';
+}
