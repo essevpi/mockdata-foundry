@@ -69,6 +69,7 @@ function JsonEditorView({ columns, records }: JsonEditorViewProps) {
               {copyMessages[copyStatus]}
             </span>
             <button
+              aria-label='Copy JSON'
               className='flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-content-muted transition hover:bg-action/15 hover:text-action'
               onClick={handleCopy}
               type='button'
