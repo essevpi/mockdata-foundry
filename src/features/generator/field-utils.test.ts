@@ -8,6 +8,7 @@ import {
   formatFieldProblem,
   formatFieldReference,
   formatGenerateShortcut,
+  getCounterTone,
   getFieldInputId,
   getFocusTargetIdAfterRemoval,
   getInvalidFieldIndexes,
@@ -255,5 +256,18 @@ describe('formatGenerateShortcut', () => {
     expect(formatGenerateShortcut('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5)')).toBe('⌘ Enter');
     expect(formatGenerateShortcut('Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)')).toBe('⌘ Enter');
     expect(formatGenerateShortcut('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe('Ctrl+Enter');
+  });
+});
+
+describe('getCounterTone', () => {
+  it('is normal below 90% of the limit', () => {
+    expect(getCounterTone(0, 1000)).toBe('normal');
+    expect(getCounterTone(899, 1000)).toBe('normal');
+  });
+
+  it('warns from 90% and turns to danger at the limit', () => {
+    expect(getCounterTone(900, 1000)).toBe('warning');
+    expect(getCounterTone(999, 1000)).toBe('warning');
+    expect(getCounterTone(1000, 1000)).toBe('danger');
   });
 });

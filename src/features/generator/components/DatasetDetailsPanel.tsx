@@ -4,11 +4,19 @@ import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import {
   canStepRecordCount,
   formatGenerateShortcut,
+  getCounterTone,
   isGenerateShortcut,
+  type CounterTone,
   stepRecordCount,
 } from '../field-utils';
 
 const GENERATE_SHORTCUT = formatGenerateShortcut(navigator.userAgent);
+
+const counterToneClassNames: Record<CounterTone, string> = {
+  normal: 'text-content-muted',
+  warning: 'font-medium text-action',
+  danger: 'font-medium text-danger',
+};
 
 const stepperButtonClassName =
   'grid size-10.5 place-items-center text-content transition focus-visible:-outline-offset-2 hover:bg-action/15 hover:text-content aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:bg-transparent aria-disabled:hover:text-content-muted/50';
@@ -84,7 +92,13 @@ function DatasetDetailsPanel({
               <kbd className="font-sans">{GENERATE_SHORTCUT}</kbd> to generate
             </span>
           </p>
-          <p className="text-xs tabular-nums text-content-muted">
+          <p
+            className={`text-xs tabular-nums ${
+              counterToneClassNames[
+                getCounterTone(description.length, REQUEST_LIMITS.descriptionMaxLength)
+              ]
+            }`}
+          >
             {description.length}/{REQUEST_LIMITS.descriptionMaxLength}
           </p>
         </div>

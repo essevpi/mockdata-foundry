@@ -214,3 +214,14 @@ export function isGenerateShortcut(event: { key: string; ctrlKey: boolean; metaK
 export function formatGenerateShortcut(userAgent: string) {
   return /Mac|iPhone|iPad|iPod/.test(userAgent) ? '⌘ Enter' : 'Ctrl+Enter';
 }
+
+export type CounterTone = 'normal' | 'warning' | 'danger';
+
+// Character counter colour: a warning from 90% of the limit, danger once the limit is reached.
+export function getCounterTone(length: number, max: number): CounterTone {
+  if (length >= max) {
+    return 'danger';
+  }
+
+  return length >= max * 0.9 ? 'warning' : 'normal';
+}
