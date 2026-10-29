@@ -1,4 +1,5 @@
 import { Minus, Plus } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { REQUEST_LIMITS, type ValidationIssue } from '../../../lib/generation';
 import { canStepRecordCount, stepRecordCount } from '../field-utils';
 
@@ -6,9 +7,12 @@ const stepperButtonClassName =
   'grid size-10.5 place-items-center text-content transition focus-visible:-outline-offset-2 hover:bg-action/15 hover:text-content aria-disabled:cursor-not-allowed aria-disabled:text-content-muted/50 aria-disabled:hover:bg-transparent aria-disabled:hover:text-content-muted/50';
 
 type DatasetDetailsPanelProps = {
+  // Rendered under the description box (example presets) and beside the heading (Clear form).
+  belowDescription?: ReactNode;
   countIssues: ValidationIssue[];
   description: string;
   descriptionIssues: ValidationIssue[];
+  headerAction?: ReactNode;
   recordCount: string;
   onCountBlur: () => void;
   onDescriptionBlur: () => void;
@@ -17,9 +21,11 @@ type DatasetDetailsPanelProps = {
 };
 
 function DatasetDetailsPanel({
+  belowDescription,
   countIssues,
   description,
   descriptionIssues,
+  headerAction,
   recordCount,
   onCountBlur,
   onDescriptionBlur,
@@ -28,9 +34,12 @@ function DatasetDetailsPanel({
 }: DatasetDetailsPanelProps) {
   return (
     <section>
-      <h2 id="dataset-setup-heading" className="text-lg font-semibold text-content">
-        Describe your dataset
-      </h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 id="dataset-setup-heading" className="text-lg font-semibold text-content">
+          Describe your dataset
+        </h2>
+        {headerAction}
+      </div>
       <p className="mt-1 text-sm leading-6 text-content-muted">
         Include the kind of records and the context that makes them useful.
       </p>
@@ -58,6 +67,7 @@ function DatasetDetailsPanel({
             {description.length}/{REQUEST_LIMITS.descriptionMaxLength}
           </p>
         </div>
+        {belowDescription}
         {descriptionIssues.map((issue) => (
           <p key={issue.message} className="mt-2 text-xs text-danger">
             {issue.message}

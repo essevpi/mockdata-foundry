@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { AnimatePresence } from 'motion/react';
 import { flushSync } from 'react-dom';
 import { generate } from '../../../lib/generate';
 import {
@@ -10,28 +11,45 @@ import {
 import type { MockOutcome } from '../../../lib/mock-generator';
 import {
   buildGenerateRequest,
+  DEFAULT_RECORD_COUNT,
+  FORM_RESET_BUTTON_ID,
   createFieldDraft,
+  createFieldDraftFromDefinition,
   getFieldInputId,
   getFocusTargetIdAfterRemoval,
   getVisibleIssues,
+  isFormBlank,
   summarizeFieldIssues,
   type FieldDraft,
   type TouchedSection,
 } from '../field-utils';
+import type { Preset } from '../presets';
 import { CommandBar } from './CommandBar';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
 import { DevTools } from './DevTools';
+import { ExamplePresets } from './ExamplePresets';
+import { FormResetButton } from './FormResetButton';
 import { FieldBuilderPanel } from './FieldBuilderPanel';
 import { PourLine } from './PourLine';
 import { ResultsPanel } from './ResultsPanel';
 
+type ClearedForm = {
+  description: string;
+  fields: FieldDraft[];
+  recordCount: string;
+};
+
 function GeneratorWorkspace() {
   const [description, setDescription] = useState('');
   const [fields, setFields] = useState<FieldDraft[]>([]);
-  const [recordCount, setRecordCount] = useState('10');
+  const [recordCount, setRecordCount] = useState(DEFAULT_RECORD_COUNT);
   const [generation, setGeneration] = useState<GenerationState>({ status: 'idle' });
   const [mockOutcome, setMockOutcome] = useState<MockOutcome>('success');
   const [touched, setTouched] = useState<ReadonlySet<TouchedSection>>(new Set());
+  // What Clear form removed, kept until the form gets new content so Undo can restore it.
+  const [clearedForm, setClearedForm] = useState<ClearedForm | null>(null);
+  const [resetAnnouncement, setResetAnnouncement] = useState('');
+  const isBlank = isFormBlank(description, fields);
   const requestValidation = validateGenerateRequest(
     buildGenerateRequest(description, recordCount, fields),
   );
@@ -65,6 +83,48 @@ function GeneratorWorkspace() {
     );
   }
 
+  // Once the form has new content the cleared one can no longer be restored.
+  function dropClearedForm() {
+    setClearedForm(null);
+    setResetAnnouncement('');
+  }
+
+  function changeDescription(nextDescription: string) {
+    dropClearedForm();
+    setDescription(nextDescription);
+  }
+
+  function clearForm() {
+    flushSync(() => {
+      setClearedForm({ description, fields, recordCount });
+      setResetAnnouncement('Form cleared.');
+      setDescription('');
+      setRecordCount(DEFAULT_RECORD_COUNT);
+      setFields([]);
+      setTouched(new Set());
+    });
+
+    // The same button now offers Undo, so focus normally stays on it already.
+    document.getElementById(FORM_RESET_BUTTON_ID)?.focus();
+  }
+
+  function undoClear() {
+    if (!clearedForm) {
+      return;
+    }
+
+    flushSync(() => {
+      setDescription(clearedForm.description);
+      setRecordCount(clearedForm.recordCount);
+      setFields(clearedForm.fields);
+      setTouched(new Set());
+      setClearedForm(null);
+      setResetAnnouncement('Form restored.');
+    });
+
+    document.getElementById(FORM_RESET_BUTTON_ID)?.focus();
+  }
+
   function updateField(index: number, updates: Partial<FieldDraft>) {
     markTouched('fields');
     setFields((currentFields) =>
@@ -81,6 +141,7 @@ function GeneratorWorkspace() {
 
     const draft = createFieldDraft(fields);
 
+    dropClearedForm();
     markTouched('fields');
     flushSync(() => {
       setFields((currentFields) => [...currentFields, draft]);
@@ -101,6 +162,24 @@ function GeneratorWorkspace() {
       setFields((currentFields) => currentFields.filter((_, fieldIndex) => fieldIndex !== index));
     });
     document.getElementById(focusTargetId)?.focus();
+  }
+
+  function applyPreset(preset: Preset) {
+    flushSync(() => {
+      dropClearedForm();
+      setDescription(preset.description);
+      setRecordCount(preset.recordCount);
+      setFields(preset.fields.map(createFieldDraftFromDefinition));
+      setTouched(new Set());
+    });
+
+    // The preset buttons are gone now; continue in the description with the caret at the end.
+    const descriptionInput = document.getElementById('description');
+
+    if (descriptionInput instanceof HTMLTextAreaElement) {
+      descriptionInput.focus();
+      descriptionInput.setSelectionRange(preset.description.length, preset.description.length);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -156,13 +235,27 @@ function GeneratorWorkspace() {
           }`}
         >
           <DatasetDetailsPanel
+            belowDescription={
+              <AnimatePresence initial={false}>
+                {isBlank && <ExamplePresets key="presets" onApply={applyPreset} />}
+              </AnimatePresence>
+            }
+            headerAction={
+              <FormResetButton
+                announcement={resetAnnouncement}
+                canUndo={clearedForm !== null}
+                isBlank={isBlank}
+                onClear={clearForm}
+                onUndo={undoClear}
+              />
+            }
             countIssues={getIssues('count')}
             description={description}
             descriptionIssues={getIssues('description')}
             recordCount={recordCount}
             onCountBlur={() => markTouched('count')}
             onDescriptionBlur={() => markTouched('description')}
-            onDescriptionChange={setDescription}
+            onDescriptionChange={changeDescription}
             onRecordCountChange={setRecordCount}
           />
           <FieldBuilderPanel

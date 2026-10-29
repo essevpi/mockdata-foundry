@@ -4,6 +4,7 @@ import {
   ADD_FIELD_BUTTON_ID,
   canStepRecordCount,
   createFieldDraft,
+  createFieldDraftFromDefinition,
   formatFieldProblem,
   formatFieldReference,
   getFieldInputId,
@@ -11,6 +12,7 @@ import {
   getInvalidFieldIndexes,
   getNextFieldName,
   getVisibleIssues,
+  isFormBlank,
   stepRecordCount,
   summarizeFieldIssues,
   type FieldDraft,
@@ -24,6 +26,41 @@ describe('createFieldDraft', () => {
 
     expect(first.id).not.toBe(second.id);
     expect([first.name, second.name]).toEqual(['field1', 'field2']);
+  });
+});
+
+describe('createFieldDraftFromDefinition', () => {
+  it('keeps the definition and adds an id distinct from other drafts', () => {
+    const blank = createFieldDraft([]);
+    const draft = createFieldDraftFromDefinition({
+      name: 'email',
+      type: 'string',
+      nullable: true,
+      guidance: 'Lowercase',
+    });
+
+    expect(draft).toEqual({
+      id: expect.any(String),
+      name: 'email',
+      type: 'string',
+      nullable: true,
+      guidance: 'Lowercase',
+    });
+    expect(draft.id).not.toBe(blank.id);
+  });
+});
+
+describe('isFormBlank', () => {
+  const field: FieldDraft = { id: 'a', name: 'email', type: 'string', nullable: false };
+
+  it('is blank with no description text and no fields', () => {
+    expect(isFormBlank('', [])).toBe(true);
+    expect(isFormBlank('  \n', [])).toBe(true);
+  });
+
+  it('is not blank once there is a description or a field', () => {
+    expect(isFormBlank('Users', [])).toBe(false);
+    expect(isFormBlank('', [field])).toBe(false);
   });
 });
 

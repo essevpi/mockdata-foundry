@@ -45,7 +45,7 @@ function DevTools({ outcome, onOutcomeChange }: DevToolsProps) {
   }, [open]);
 
   return (
-    <div ref={rootRef} className="fixed right-3 top-[4.75rem] z-40 lg:bottom-3 lg:top-auto">
+    <div ref={rootRef} className="fixed right-16 top-4 z-40 sm:right-[4.5rem] lg:bottom-3 lg:right-3 lg:top-auto">
       <button
         ref={buttonRef}
         aria-controls={open ? PANEL_ID : undefined}

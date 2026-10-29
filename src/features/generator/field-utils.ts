@@ -19,6 +19,9 @@ export type FieldValidationIssues = {
 
 export const ADD_FIELD_BUTTON_ID = 'add-field-button';
 export const FIELD_PROBLEMS_ID = 'field-problems';
+export const FORM_RESET_BUTTON_ID = 'form-reset-button';
+
+export const DEFAULT_RECORD_COUNT = '10';
 
 let nextFieldId = 0;
 
@@ -41,6 +44,17 @@ export function createFieldDraft(existingFields: FieldDraft[]): FieldDraft {
     type: 'string',
     nullable: false,
   };
+}
+
+export function createFieldDraftFromDefinition(definition: FieldDefinition): FieldDraft {
+  nextFieldId += 1;
+
+  return { ...definition, id: `field-${nextFieldId}` };
+}
+
+// The example presets are offered only while nothing has been entered yet.
+export function isFormBlank(description: string, fields: FieldDraft[]) {
+  return description.trim() === '' && fields.length === 0;
 }
 
 export function getNextFieldName(fields: FieldDefinition[]) {
