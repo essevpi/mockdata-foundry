@@ -24,7 +24,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-re
 - `src/features/theme/`: `ThemeToggle.tsx` and pure `theme-utils.ts` (stored-theme parsing)
 - `src/index.css`: Tailwind import and theme tokens
 - `api/generate.ts`: the Vercel Function entry (`POST /api/generate`); only reads `process.env` and delegates to `src/server/`. Every file in `api/` becomes a function, so keep shared code out of it.
-- `src/server/`: environment-free server logic (`handler.ts` validates and answers requests; `response-schema.ts`, `prompt.ts` and `output-validation.ts` build the Groq schema and messages and check its output), unit-tested with an injected `fetch`. Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
+- `src/server/`: environment-free server logic (`handler.ts` validates requests, calls Groq through `groq.ts`, maps outcomes to the error envelope and logs one usage line per call; `response-schema.ts`, `prompt.ts` and `output-validation.ts` build the Groq schema and messages and check its output), unit-tested with an injected `fetch`. Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
 
 ## Code Organization
 
@@ -38,7 +38,7 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 ## Commands
 
 - `npm run dev`: Vite dev server (mock generator only; does not serve `/api`)
-- `npm run dev:vercel`: `vercel dev` on the linked project, serving the app and `/api/generate` with `.env.local` (git-ignored, holds `GROQ_API_KEY`)
+- `npm run dev:vercel`: `vercel dev` on the linked project, serving the app and `/api/generate`. Function variables come only from `.env` (git-ignored, holds the development `GROQ_API_KEY`), not `.env.local` (which holds the CLI's `VERCEL_OIDC_TOKEN`)
 - `npm run build`: TypeScript checks and production bundle
 - `npm run lint`: ESLint
 - `npm test`: Vitest unit tests, single run
@@ -59,7 +59,7 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 
 ## Integration and Credential Safety
 
-- Keep LLM provider credentials server-side; never expose secrets in browser code or commit them.
+- Keep LLM provider credentials server-side; never expose secrets in browser code or commit them. Vite exposes `VITE_`-prefixed variables to the browser, so never give a server secret that prefix. Locally the key lives in `.env`; in deployments it is a Vercel Secret, with a separate Groq key per environment.
 - Before implementing a provider integration, check the current provider documentation for API behavior, authentication and supported models.
 - Treat LLM output as untrusted: validate provider responses against the contract in `PLAN.md` with hand-written checks before they reach the UI.
 - Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The only approved addition still to come is the Vercel CLI (development); add it only when a task needs it. No other new dependencies.

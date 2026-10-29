@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { REQUEST_LIMITS, type GenerateRequest, type GenerationError } from '../lib/generation.js';
-import { handleGenerate } from './handler.js';
+import {
+  REQUEST_LIMITS,
+  type GenerateRequest,
+  type GenerateSuccess,
+  type GenerationError,
+} from '../lib/generation.js';
+import { handleGenerate, type GenerateLogEntry } from './handler.js';
 
 const validRequest: GenerateRequest = {
   description: 'Customers for a design tool',
@@ -17,11 +22,41 @@ function buildRequest(body: string, init: RequestInit = {}): Request {
   });
 }
 
-async function run(request: Request, apiKey: string | undefined = 'test-key') {
-  const fetchSpy = vi.fn<typeof fetch>();
-  const response = await handleGenerate(request, { apiKey, fetch: fetchSpy });
+function groqResponse(body: unknown, init: ResponseInit = {}) {
+  return new Response(JSON.stringify(body), {
+    headers: { 'Content-Type': 'application/json' },
+    ...init,
+  });
+}
 
-  return { response, body: (await response.json()) as GenerationError, fetchSpy };
+function groqCompletion(content: string, finishReason = 'stop') {
+  return groqResponse({
+    choices: [{ message: { content }, finish_reason: finishReason }],
+    usage: { prompt_tokens: 300, completion_tokens: 500 },
+  });
+}
+
+async function run(
+  request: Request,
+  apiKey: string | undefined = 'test-key',
+  providerResponse: () => Response | Promise<Response> = () => groqResponse({}, { status: 500 }),
+) {
+  const fetchSpy = vi.fn<typeof fetch>(async () => providerResponse());
+  const logSpy = vi.fn<(entry: GenerateLogEntry) => void>();
+  const response = await handleGenerate(request, { apiKey, fetch: fetchSpy, log: logSpy });
+  const text = await response.text();
+
+  return {
+    response,
+    text,
+    body: JSON.parse(text) as GenerationError & GenerateSuccess,
+    fetchSpy,
+    logSpy,
+  };
+}
+
+function validJsonRequest(overrides: Partial<GenerateRequest> = {}) {
+  return buildRequest(JSON.stringify({ ...validRequest, ...overrides }));
 }
 
 describe('handleGenerate before the provider call', () => {
@@ -98,10 +133,10 @@ describe('handleGenerate before the provider call', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('reports a configuration error when the API key is missing', async () => {
+  it('reports a configuration error when the API key is missing or empty', async () => {
     const { response, body, fetchSpy } = await run(
       buildRequest(JSON.stringify(validRequest)),
-      undefined,
+      '',
     );
 
     expect(response.status).toBe(500);
@@ -114,5 +149,98 @@ describe('handleGenerate before the provider call', () => {
 
     expect(response.headers.get('Cache-Control')).toBe('no-store');
     expect(response.headers.get('Content-Type')).toContain('application/json');
+  });
+});
+
+describe('handleGenerate with the provider', () => {
+  const twoRecords = { records: [{ email: 'a@example.com' }, { email: 'b@example.com' }] };
+
+  it('returns validated records on success and logs usage without data', async () => {
+    const { response, body, logSpy } = await run(validJsonRequest({ count: 2 }), 'test-key', () =>
+      groqCompletion(JSON.stringify(twoRecords)),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('Cache-Control')).toBe('no-store');
+    expect(body).toEqual(twoRecords);
+    expect(logSpy).toHaveBeenCalledWith({
+      outcome: 'success',
+      status: 200,
+      finishReason: 'stop',
+      usage: { promptTokens: 300, completionTokens: 500, reasoningTokens: undefined },
+      records: 2,
+      fields: 1,
+      durationMs: expect.any(Number),
+    });
+    expect(JSON.stringify(logSpy.mock.calls)).not.toContain('example.com');
+  });
+
+  it('discards output that fails validation', async () => {
+    const { response, body, logSpy } = await run(validJsonRequest({ count: 3 }), 'test-key', () =>
+      groqCompletion(JSON.stringify(twoRecords)),
+    );
+
+    expect(response.status).toBe(502);
+    expect(body).toEqual({
+      error: { code: 'INVALID_GENERATION', message: expect.any(String) },
+    });
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: 'INVALID_GENERATION', reason: 'record_count' }),
+    );
+  });
+
+  it('discards a truncated completion even if it parses', async () => {
+    const { response, logSpy } = await run(validJsonRequest({ count: 2 }), 'test-key', () =>
+      groqCompletion(JSON.stringify(twoRecords), 'length'),
+    );
+
+    expect(response.status).toBe(502);
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'finish_reason_length', finishReason: 'length' }),
+    );
+  });
+
+  it('passes a provider rate limit on with its retry delay', async () => {
+    const { response, body } = await run(validJsonRequest(), 'test-key', () =>
+      groqResponse({ error: { message: 'Limit 8000, Used 7999' } }, {
+        status: 429,
+        headers: { 'retry-after': '30' },
+      }),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get('Retry-After')).toBe('30');
+    expect(body.error).toMatchObject({ code: 'RATE_LIMITED', retryAfterSeconds: 30 });
+  });
+
+  it.each([
+    [401, 500, 'CONFIGURATION_ERROR'],
+    [503, 502, 'UPSTREAM_ERROR'],
+  ])('maps provider status %i to %i %s', async (providerStatus, status, code) => {
+    const { response, body, logSpy } = await run(validJsonRequest(), 'test-key', () =>
+      groqResponse({ error: { message: 'provider detail' } }, { status: providerStatus }),
+    );
+
+    expect(response.status).toBe(status);
+    expect(body.error.code).toBe(code);
+    expect(logSpy).toHaveBeenCalledWith(expect.objectContaining({ outcome: code, providerStatus }));
+  });
+
+  it('never exposes the API key or provider messages', async () => {
+    const results = await Promise.all([
+      run(validJsonRequest(), 'secret-key', () =>
+        groqResponse({ error: { message: 'provider detail' } }, { status: 401 }),
+      ),
+      run(validJsonRequest(), 'secret-key', () =>
+        groqResponse({ error: { message: 'provider detail' } }, { status: 400 }),
+      ),
+    ]);
+
+    for (const { text, logSpy } of results) {
+      const logged = JSON.stringify(logSpy.mock.calls);
+
+      expect(text).not.toMatch(/secret-key|provider detail/);
+      expect(logged).not.toMatch(/secret-key|provider detail|Customers for a design tool/);
+    }
   });
 });

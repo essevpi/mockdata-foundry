@@ -6,6 +6,10 @@ export const config = {
 
 export default {
   fetch(request: Request) {
-    return handleGenerate(request, { apiKey: process.env.GROQ_API_KEY, fetch });
+    return handleGenerate(request, {
+      apiKey: process.env.GROQ_API_KEY,
+      fetch,
+      log: (entry) => console.info(JSON.stringify({ event: 'generate', ...entry })),
+    });
   },
 };
