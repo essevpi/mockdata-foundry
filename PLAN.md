@@ -149,7 +149,7 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
 
 3. **Server generation contract** — ⏳ in progress
    1. ✅ Scaffold: Vercel CLI (`dev:vercel`), `tsconfig.api.json`, `api/generate.ts` delegating to `src/server/handler.ts`, which rejects wrong methods (405), bodies over 8 KiB (413), non-JSON content types (415), malformed JSON and invalid requests (400) before any provider call; error messages shared with the mock via `GENERATION_ERROR_MESSAGES`. Verified under `vercel dev`.
-   2. ⏳ Strict response schema, prompt and output validator.
+   2. ✅ Strict response schema (`response-schema.ts`: closed objects, all fields required, nullable as a type union, guidance kept out of the schema), prompt (`prompt.ts`: rules in the system message, the request as JSON data in the user message) and output validator (`output-validation.ts`: exact shape, count and field set, declared types, safe integers, nullability, 64 code points per string; records rebuilt in field order; a failure reason for logging).
    3. ⏳ Groq call, error mapping and usage log line.
    4. ⏳ Smoke test of a maximum-size request; record results; close the milestone.
    - Add `api/generate.ts` and `tsconfig.api.json`, shared authoritative validation, strict-schema generation with nullable union types, Groq request handling (`reasoning_effort: "low"`, `include_reasoning: false`), output validation, completion-token cap, and sanitized error mapping. Unit-test the schema builder and output validator.

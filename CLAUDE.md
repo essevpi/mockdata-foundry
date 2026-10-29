@@ -24,7 +24,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-re
 - `src/features/theme/`: `ThemeToggle.tsx` and pure `theme-utils.ts` (stored-theme parsing)
 - `src/index.css`: Tailwind import and theme tokens
 - `api/generate.ts`: the Vercel Function entry (`POST /api/generate`); only reads `process.env` and delegates to `src/server/`. Every file in `api/` becomes a function, so keep shared code out of it.
-- `src/server/`: environment-free server logic (`handler.ts` validates and answers requests), unit-tested with an injected `fetch`. Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
+- `src/server/`: environment-free server logic (`handler.ts` validates and answers requests; `response-schema.ts`, `prompt.ts` and `output-validation.ts` build the Groq schema and messages and check its output), unit-tested with an injected `fetch`. Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
 
 ## Code Organization
 
