@@ -44,6 +44,16 @@ export type GenerationErrorCode =
   | 'UPSTREAM_ERROR'
   | 'INVALID_GENERATION';
 
+// User-facing messages shared by the server and the dev mock so their wording cannot drift.
+export const GENERATION_ERROR_MESSAGES: Record<GenerationErrorCode, string> = {
+  INVALID_REQUEST: 'The request was not accepted. Check your description and fields, then try again.',
+  CONFIGURATION_ERROR: 'Data generation is not available right now. Please try again later.',
+  RATE_LIMITED: 'Too many requests. Please wait before generating again.',
+  UPSTREAM_ERROR: 'The data provider could not complete the request. Please try again.',
+  INVALID_GENERATION:
+    'The generated data did not match your fields, so it was discarded. Please try again.',
+};
+
 export type GenerationError = {
   error: {
     code: GenerationErrorCode;

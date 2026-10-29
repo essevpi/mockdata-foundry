@@ -1,11 +1,12 @@
-import type {
-  FieldDefinition,
-  GenerateRequest,
-  GenerateResponse,
-  GenerateSuccess,
-  GenerationError,
-  GenerationErrorCode,
-  PrimitiveValue,
+import {
+  GENERATION_ERROR_MESSAGES,
+  type FieldDefinition,
+  type GenerateRequest,
+  type GenerateResponse,
+  type GenerateSuccess,
+  type GenerationError,
+  type GenerationErrorCode,
+  type PrimitiveValue,
 } from './generation';
 
 export const MOCK_OUTCOMES = [
@@ -19,29 +20,11 @@ export const MOCK_OUTCOMES = [
 
 export type MockOutcome = (typeof MOCK_OUTCOMES)[number];
 
-const MOCK_ERRORS: Record<GenerationErrorCode, GenerationError['error']> = {
-  INVALID_REQUEST: {
-    code: 'INVALID_REQUEST',
-    message: 'The request was not accepted. Check your description and fields, then try again.',
-  },
-  CONFIGURATION_ERROR: {
-    code: 'CONFIGURATION_ERROR',
-    message: 'Data generation is not available right now. Please try again later.',
-  },
-  RATE_LIMITED: {
-    code: 'RATE_LIMITED',
-    message: 'Too many requests. Please wait before generating again.',
-    retryAfterSeconds: 600,
-  },
-  UPSTREAM_ERROR: {
-    code: 'UPSTREAM_ERROR',
-    message: 'The data provider could not complete the request. Please try again.',
-  },
-  INVALID_GENERATION: {
-    code: 'INVALID_GENERATION',
-    message: 'The generated data did not match your fields, so it was discarded. Please try again.',
-  },
-};
+function createMockError(code: GenerationErrorCode): GenerationError['error'] {
+  const error = { code, message: GENERATION_ERROR_MESSAGES[code] };
+
+  return code === 'RATE_LIMITED' ? { ...error, retryAfterSeconds: 600 } : error;
+}
 
 // Contains a quote, a comma, and a line break so export escaping can be checked by eye.
 const AWKWARD_TEXT = 'He said "hi", then\nleft';
@@ -88,5 +71,5 @@ export function getMockResponse(request: GenerateRequest, outcome: MockOutcome):
     return createMockSuccess(request);
   }
 
-  return { error: MOCK_ERRORS[outcome] };
+  return { error: createMockError(outcome) };
 }

@@ -147,7 +147,11 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Acceptance: the request pane stays usable at 375px and 1440px with the command bar always reachable; field problems never shift the rows; presets, Clear/Undo and the shortcut work by keyboard; every state reads well in both palettes and with reduced motion.
    - Checks: lint, build, tests (presets, field and counter helpers, shortcut), and Playwright browser checks in both palettes at desktop and phone widths.
 
-3. **Server generation contract** — ⏳ not started
+3. **Server generation contract** — ⏳ in progress
+   1. ✅ Scaffold: Vercel CLI (`dev:vercel`), `tsconfig.api.json`, `api/generate.ts` delegating to `src/server/handler.ts`, which rejects wrong methods (405), bodies over 8 KiB (413), non-JSON content types (415), malformed JSON and invalid requests (400) before any provider call; error messages shared with the mock via `GENERATION_ERROR_MESSAGES`. Verified under `vercel dev`.
+   2. ⏳ Strict response schema, prompt and output validator.
+   3. ⏳ Groq call, error mapping and usage log line.
+   4. ⏳ Smoke test of a maximum-size request; record results; close the milestone.
    - Add `api/generate.ts` and `tsconfig.api.json`, shared authoritative validation, strict-schema generation with nullable union types, Groq request handling (`reasoning_effort: "low"`, `include_reasoning: false`), output validation, completion-token cap, and sanitized error mapping. Unit-test the schema builder and output validator.
    - Acceptance: malformed, oversized, and out-of-range requests fail before Groq; invalid output is never returned; no credential reaches the browser.
    - Checks: lint, build, tests, local endpoint requests through `vercel dev`, and a smoke test recording token usage and count/length violation rates for a maximum-size request.

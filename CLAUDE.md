@@ -8,7 +8,7 @@ When a change affects the commands, project layout, conventions or dependency ru
 
 ## Stack
 
-React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. Neither is integrated yet: treat both as plans until the server function and integrations are added (progress in `PLAN.md`).
+React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. The Vercel Function is being built (milestone 3) and the UI still uses the mock; the Groq call is not integrated yet (progress in `PLAN.md`).
 
 ## Project Layout
 
@@ -23,7 +23,8 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-re
 - `src/lib/export.ts`, `src/lib/download.ts`: pure JSON/CSV serialization (CSV null convention in `PLAN.md`) and the browser download helper
 - `src/features/theme/`: `ThemeToggle.tsx` and pure `theme-utils.ts` (stored-theme parsing)
 - `src/index.css`: Tailwind import and theme tokens
-- Planned, not yet present: `api/generate.ts` (Vercel Function) and `tsconfig.api.json`
+- `api/generate.ts`: the Vercel Function entry (`POST /api/generate`); only reads `process.env` and delegates to `src/server/`. Every file in `api/` becomes a function, so keep shared code out of it.
+- `src/server/`: environment-free server logic (`handler.ts` validates and answers requests), unit-tested with an injected `fetch`. Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
 
 ## Code Organization
 
@@ -36,7 +37,8 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 
 ## Commands
 
-- `npm run dev`: Vite dev server
+- `npm run dev`: Vite dev server (mock generator only; does not serve `/api`)
+- `npm run dev:vercel`: `vercel dev` on the linked project, serving the app and `/api/generate` with `.env.local` (git-ignored, holds `GROQ_API_KEY`)
 - `npm run build`: TypeScript checks and production bundle
 - `npm run lint`: ESLint
 - `npm test`: Vitest unit tests, single run
