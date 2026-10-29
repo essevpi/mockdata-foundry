@@ -4,7 +4,7 @@
 
 Retain the focused MVP: describe a dataset, define a flat record shape, select 1–50 records, generate and validate data, preview it, and export JSON or CSV. Defer authentication, persistence, history, raw JSON Schema editing, nested fields, model selection, provider fallback, automatic retries, and batch generation.
 
-Use a two-pane workspace: the request form and field builder beside the results on large screens, stacked on smaller ones. Results can be viewed as a table or as the exported JSON. A field row contains:
+Use a two-pane workspace: the request form and field builder beside the results on large screens, stacked on smaller ones. Results can be viewed as a table or as the exported JSON. A blank form offers three example presets (Customers, Orders, Employees) under the description box; Clear form, with Undo, resets the request without discarding results; Ctrl/Cmd+Enter in the description generates. A field row contains:
 
 - Unique name: 1–40 characters; starts with a letter, then letters, digits, or underscores (for example `camelCase` or `snake_case`)
 - Type: `string`, `number`, `integer`, or `boolean`
@@ -135,6 +135,17 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Decisions: the toggle is a compact segmented control in the results header on every width (the header keeps its 44px height in every state); the pour line runs along the pane seam at lg and across the Generate bar when stacked; Copy lives in the Editor's file tab; the Editor does not wrap lines.
    - Acceptance: request and results are both visible at lg; 50 records × 8 fields scroll inside their view in both Table and Editor without breaking layout at 375px or 1440px; Editor text equals the JSON download; the toggle works by keyboard with a visible selected state; every results state reads well in both palettes; the CSV null convention and formula note stay visible in the results view next to the downloads (export footer below the preview, amended in 2c).
    - Checks: lint, build, tests (tokenizer, theme helpers), browser check per step in both palettes and with reduced motion.
+
+2c. **Layout polish and light palette** — ✅ done
+   - Command bar: an always-visible bar with Add field and Generate data (equal width); field problems slide up from behind it in a problem tray that lists each problem once with clickable field references and highlights the affected rows. The tray cannot be dismissed; description and record-count messages stay under their own inputs. Disabled-button reasons are exposed via `title` and hidden text, not shown in the bar.
+   - Compact one-line field rows (name, type, Nullable, Guidance toggle, remove) at 576px and wider; Remove is icon-only on phones. Styled dropdowns: a native `<select>` with a themed closed state and, in Chromium 135+ with a mouse (`appearance: base-select`), an animated list that opens downward and flips up only when it does not fit; touch devices keep the native picker.
+   - Light palette with stepped surfaces (page, card, well), a `--theme-button` token and accent-tinted hovers; the light theme still applies only through the toggle, never `prefers-color-scheme`.
+   - Export footer under the preview with both downloads and their notes (null convention, CSV quoting, formula note); a clicked download briefly shows "Downloaded" at a stable width with a polite status message.
+   - Example presets (`presets.ts`, three datasets within `REQUEST_LIMITS`) under the description box, shown only while the form is blank; Clear form with Undo in the dataset heading row; Ctrl/Cmd+Enter in the description submits through the normal Generate path; the description counter turns accent from 90% of the limit and danger at the limit.
+   - Dev tools (forcing mock outcomes) live in a floating corner widget that exists only in dev builds.
+   - Deferred: rework of the export footer layout (single row of buttons, notes as a definition list) is postponed until after the LLM integration, together with any further UI refresh.
+   - Acceptance: the request pane stays usable at 375px and 1440px with the command bar always reachable; field problems never shift the rows; presets, Clear/Undo and the shortcut work by keyboard; every state reads well in both palettes and with reduced motion.
+   - Checks: lint, build, tests (presets, field and counter helpers, shortcut), and Playwright browser checks in both palettes at desktop and phone widths.
 
 3. **Server generation contract** — ⏳ not started
    - Add `api/generate.ts` and `tsconfig.api.json`, shared authoritative validation, strict-schema generation with nullable union types, Groq request handling (`reasoning_effort: "low"`, `include_reasoning: false`), output validation, completion-token cap, and sanitized error mapping. Unit-test the schema builder and output validator.
