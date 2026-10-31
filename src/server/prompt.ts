@@ -11,7 +11,7 @@ Reply with JSON that matches the provided schema: an object whose "records" arra
 
 Rules:
 - Produce exactly the requested number of records. Every record has every listed field.
-- Strings are at most ${REQUEST_LIMITS.returnedStringMaxLength} characters.
+- Strings are at most ${REQUEST_LIMITS.returnedStringMaxLength} characters. Keep them well under that limit, ideally 50 characters or fewer, even when asked for long values.
 - "integer" fields are whole numbers; "number" fields may have decimals.
 - A field marked nullable may be null where a real dataset would have a missing value; use null on some records, not all. Fields not marked nullable are never null.
 - Make values varied and plausible, and consistent within a record (for example, an email that matches the person's name). Avoid placeholders such as "string1" or "example".

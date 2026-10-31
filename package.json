@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:vercel": "vercel dev",
+    "smoke": "node scripts/smoke-generate.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

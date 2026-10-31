@@ -20,7 +20,7 @@ function validRecords() {
   ];
 }
 
-function validate(records: unknown, override: Partial<GenerateRequest> = {}) {
+function validate(records: unknown[], override: Partial<GenerateRequest> = {}) {
   return validateGeneratedOutput(JSON.stringify({ records }), { ...request, ...override });
 }
 
@@ -32,7 +32,7 @@ function withFirstRecord(changes: Record<string, unknown>) {
 
 describe('validateGeneratedOutput', () => {
   it('accepts valid output', () => {
-    expect(validate(validRecords())).toEqual({ ok: true, records: validRecords() });
+    expect(validate(validRecords())).toEqual({ ok: true, records: validRecords(), droppedRecords: 0 });
   });
 
   it('returns records in the declared field order', () => {
@@ -53,7 +53,7 @@ describe('validateGeneratedOutput', () => {
       fields: [{ name: 'constructor', type: 'string', nullable: false }],
     });
 
-    expect(result).toEqual({ ok: true, records: [{ constructor: 'x' }] });
+    expect(result).toEqual({ ok: true, records: [{ constructor: 'x' }], droppedRecords: 0 });
   });
 
   it('rejects content that is not JSON', () => {
@@ -75,11 +75,36 @@ describe('validateGeneratedOutput', () => {
     expect(validate([validRecords()[0], 'nope'])).toEqual({ ok: false, reason: 'wrong_shape' });
   });
 
-  it.each([
-    ['one too few', validRecords().slice(0, 1)],
-    ['one too many', [...validRecords(), validRecords()[0]]],
-  ])('rejects %s records', (_, records) => {
-    expect(validate(records)).toEqual({ ok: false, reason: 'record_count' });
+  it('rejects too few records', () => {
+    expect(validate(validRecords().slice(0, 1))).toEqual({
+      ok: false,
+      reason: 'record_count',
+      receivedRecords: 1,
+    });
+  });
+
+  it('keeps the first records unchanged when there are too many', () => {
+    const surplus = { name: 'Extra', age: 1, balance: 1, active: true };
+
+    expect(validate([...validRecords(), surplus, surplus])).toEqual({
+      ok: true,
+      records: validRecords(),
+      droppedRecords: 2,
+    });
+  });
+
+  it('ignores invalid surplus records', () => {
+    expect(validate([...validRecords(), { bogus: true }])).toMatchObject({
+      ok: true,
+      droppedRecords: 1,
+    });
+  });
+
+  it('still validates the records it keeps', () => {
+    expect(validate([...withFirstRecord({ age: 'old' }), validRecords()[0]])).toEqual({
+      ok: false,
+      reason: 'type',
+    });
   });
 
   it('rejects a missing field', () => {

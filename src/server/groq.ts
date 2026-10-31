@@ -4,7 +4,10 @@ import { RESPONSE_SCHEMA_NAME, buildResponseSchema } from './response-schema.js'
 
 export const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
 export const GROQ_MODEL = 'openai/gpt-oss-120b';
-export const MAX_COMPLETION_TOKENS = 6_000;
+// A maximum-size request (50 × 8) uses ~4.5–5.8K completion tokens, more when the model
+// overshoots the record count. With a ~700-token prompt, 7,000 still fits the free tier's
+// 8,000 tokens per minute.
+export const MAX_COMPLETION_TOKENS = 7_000;
 export const GROQ_TIMEOUT_MS = 45_000;
 
 export type GroqUsage = {
@@ -88,8 +91,9 @@ async function classifyErrorResponse(response: Response): Promise<GroqFailure> {
     };
   }
 
-  // Strict mode is documented as never producing invalid JSON, but Groq has reported schema
-  // failures as a 400 with this code; treat it as a generation failure, not a provider outage.
+  // Groq answers with this code when the output fails the schema, including when the
+  // completion hits max_completion_tokens mid-JSON (it does not return finish_reason
+  // "length" in strict mode). Treat it as a generation failure, not a provider outage.
   if (providerStatus === 400 && (await readProviderErrorCode(response)) === 'json_validate_failed') {
     return { code: 'INVALID_GENERATION', reason: 'provider_schema_validation', providerStatus };
   }

@@ -154,10 +154,11 @@ describe('handleGenerate before the provider call', () => {
 
 describe('handleGenerate with the provider', () => {
   const twoRecords = { records: [{ email: 'a@example.com' }, { email: 'b@example.com' }] };
+  const providerTwoRecords = JSON.stringify(twoRecords);
 
   it('returns validated records on success and logs usage without data', async () => {
     const { response, body, logSpy } = await run(validJsonRequest({ count: 2 }), 'test-key', () =>
-      groqCompletion(JSON.stringify(twoRecords)),
+      groqCompletion(providerTwoRecords),
     );
 
     expect(response.status).toBe(200);
@@ -166,6 +167,7 @@ describe('handleGenerate with the provider', () => {
     expect(logSpy).toHaveBeenCalledWith({
       outcome: 'success',
       status: 200,
+      droppedRecords: 0,
       finishReason: 'stop',
       usage: { promptTokens: 300, completionTokens: 500, reasoningTokens: undefined },
       records: 2,
@@ -175,9 +177,21 @@ describe('handleGenerate with the provider', () => {
     expect(JSON.stringify(logSpy.mock.calls)).not.toContain('example.com');
   });
 
+  it('returns the requested number of records when the model overshoots', async () => {
+    const { response, body, logSpy } = await run(validJsonRequest({ count: 1 }), 'test-key', () =>
+      groqCompletion(providerTwoRecords),
+    );
+
+    expect(response.status).toBe(200);
+    expect(body).toEqual({ records: [twoRecords.records[0]] });
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ outcome: 'success', droppedRecords: 1 }),
+    );
+  });
+
   it('discards output that fails validation', async () => {
     const { response, body, logSpy } = await run(validJsonRequest({ count: 3 }), 'test-key', () =>
-      groqCompletion(JSON.stringify(twoRecords)),
+      groqCompletion(providerTwoRecords),
     );
 
     expect(response.status).toBe(502);
@@ -185,13 +199,17 @@ describe('handleGenerate with the provider', () => {
       error: { code: 'INVALID_GENERATION', message: expect.any(String) },
     });
     expect(logSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ outcome: 'INVALID_GENERATION', reason: 'record_count' }),
+      expect.objectContaining({
+        outcome: 'INVALID_GENERATION',
+        reason: 'record_count',
+        receivedRecords: 2,
+      }),
     );
   });
 
   it('discards a truncated completion even if it parses', async () => {
     const { response, logSpy } = await run(validJsonRequest({ count: 2 }), 'test-key', () =>
-      groqCompletion(JSON.stringify(twoRecords), 'length'),
+      groqCompletion(providerTwoRecords, 'length'),
     );
 
     expect(response.status).toBe(502);

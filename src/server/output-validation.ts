@@ -16,8 +16,8 @@ export type OutputFailureReason =
   | 'string_length';
 
 export type OutputValidationResult =
-  | { ok: true; records: Array<Record<string, PrimitiveValue>> }
-  | { ok: false; reason: OutputFailureReason };
+  | { ok: true; records: Array<Record<string, PrimitiveValue>>; droppedRecords: number }
+  | { ok: false; reason: OutputFailureReason; receivedRecords?: number };
 
 class OutputError extends Error {
   readonly reason: OutputFailureReason;
@@ -89,9 +89,13 @@ function checkRecord(value: unknown, fields: FieldDefinition[]): Record<string, 
   return Object.fromEntries(fields.map((field) => [field.name, checkValue(value[field.name], field)]));
 }
 
-// Validates provider output against the request: the exact record count, the exact field set,
+// Validates provider output against the request: the record count, the exact field set,
 // declared types, nullability and the string length cap. Provider output is untrusted, so
-// nothing reaches the client unless every record passes.
+// nothing reaches the client unless every returned record passes.
+//
+// The model tends to overshoot the requested count (see response-schema.ts), so surplus
+// records are dropped unvalidated and the first `count` are kept unchanged. Too few records
+// fail: records are never padded or invented.
 export function validateGeneratedOutput(
   content: string,
   request: GenerateRequest,
@@ -108,14 +112,19 @@ export function validateGeneratedOutput(
     return { ok: false, reason: 'wrong_shape' };
   }
 
-  if (parsed.records.length !== request.count) {
-    return { ok: false, reason: 'record_count' };
+  const receivedRecords = parsed.records.length;
+
+  if (receivedRecords < request.count) {
+    return { ok: false, reason: 'record_count', receivedRecords };
   }
 
   try {
     return {
       ok: true,
-      records: parsed.records.map((record) => checkRecord(record, request.fields)),
+      records: parsed.records
+        .slice(0, request.count)
+        .map((record) => checkRecord(record, request.fields)),
+      droppedRecords: receivedRecords - request.count,
     };
   } catch (error) {
     if (error instanceof OutputError) {

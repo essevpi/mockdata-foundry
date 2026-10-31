@@ -13,6 +13,8 @@ export type GenerateLogEntry = {
   outcome: 'success' | GenerationErrorCode;
   status: number;
   reason?: string;
+  receivedRecords?: number;
+  droppedRecords?: number;
   providerStatus?: number;
   finishReason?: string | null;
   usage?: GroqUsage;
@@ -132,13 +134,18 @@ export async function handleGenerate(
   const output =
     finishReason === 'stop'
       ? validateGeneratedOutput(content ?? '', generateRequest)
-      : { ok: false as const, reason: `finish_reason_${finishReason ?? 'missing'}` };
+      : {
+          ok: false as const,
+          reason: `finish_reason_${finishReason ?? 'missing'}`,
+          receivedRecords: undefined,
+        };
 
   if (!output.ok) {
     log({
       outcome: 'INVALID_GENERATION',
       status: 502,
       reason: output.reason,
+      receivedRecords: output.receivedRecords,
       finishReason,
       usage,
     });
@@ -146,7 +153,7 @@ export async function handleGenerate(
     return errorResponse('INVALID_GENERATION');
   }
 
-  log({ outcome: 'success', status: 200, finishReason, usage });
+  log({ outcome: 'success', status: 200, droppedRecords: output.droppedRecords, finishReason, usage });
 
   return Response.json({ records: output.records }, { status: 200, headers: RESPONSE_HEADERS });
 }

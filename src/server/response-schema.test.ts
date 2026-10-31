@@ -11,9 +11,7 @@ const fields: FieldDefinition[] = [
 
 describe('buildResponseSchema', () => {
   it('wraps a closed records array in a closed object', () => {
-    const schema = buildResponseSchema(fields);
-
-    expect(schema).toMatchObject({
+    expect(buildResponseSchema(fields)).toMatchObject({
       type: 'object',
       required: ['records'],
       additionalProperties: false,
@@ -52,10 +50,10 @@ describe('buildResponseSchema', () => {
     });
   });
 
-  it('leaves guidance and undocumented strict-mode keywords out of the schema', () => {
+  it('leaves guidance, array bounds and string constraints out of the schema', () => {
     const text = JSON.stringify(buildResponseSchema(fields));
 
     expect(text).not.toContain('First and last name');
-    expect(text).not.toMatch(/maxLength|minItems|maxItems|format/);
+    expect(text).not.toMatch(/minItems|maxItems|maxLength|format/);
   });
 });

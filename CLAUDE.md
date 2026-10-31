@@ -39,6 +39,7 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 
 - `npm run dev`: Vite dev server (mock generator only; does not serve `/api`)
 - `npm run dev:vercel`: `vercel dev` on the linked project, serving the app and `/api/generate`. Function variables come only from `.env` (git-ignored, holds the development `GROQ_API_KEY`), not `.env.local` (which holds the CLI's `VERCEL_OIDC_TOKEN`)
+- `npm run smoke`: sends maximum-size requests to `/api/generate` on a running `dev:vercel` (`SMOKE_REQUEST=stress|customers`, `SMOKE_RUNS`); results are in the server's `"event":"generate"` log lines. Uses real Groq tokens
 - `npm run build`: TypeScript checks and production bundle
 - `npm run lint`: ESLint
 - `npm test`: Vitest unit tests, single run
