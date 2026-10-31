@@ -140,9 +140,9 @@ describe('stepRecordCount', () => {
   });
 
   it('clamps to the request limits', () => {
-    expect(stepRecordCount('50', 1)).toBe('50');
+    expect(stepRecordCount('25', 1)).toBe('25');
     expect(stepRecordCount('1', -1)).toBe('1');
-    expect(stepRecordCount('200', -1)).toBe('50');
+    expect(stepRecordCount('200', -1)).toBe('25');
     expect(stepRecordCount('-5', 1)).toBe('1');
   });
 
@@ -162,8 +162,8 @@ describe('canStepRecordCount', () => {
   it('is false only at the limits', () => {
     expect(canStepRecordCount('1', -1)).toBe(false);
     expect(canStepRecordCount('1', 1)).toBe(true);
-    expect(canStepRecordCount('50', 1)).toBe(false);
-    expect(canStepRecordCount('50', -1)).toBe(true);
+    expect(canStepRecordCount('25', 1)).toBe(false);
+    expect(canStepRecordCount('25', -1)).toBe(true);
   });
 
   it('allows stepping from empty or invalid text', () => {

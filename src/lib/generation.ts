@@ -7,9 +7,9 @@ export const REQUEST_LIMITS = {
   fieldsMaxCount: 8,
   fieldsMinCount: 1,
   maxRequestBytes: 8 * 1_024,
-  recordsMaxCount: 50,
+  recordsMaxCount: 25,
   recordsMinCount: 1,
-  returnedStringMaxLength: 64,
+  returnedStringMaxLength: 100,
 } as const;
 
 const fieldNamePattern = /^[A-Za-z][A-Za-z0-9_]*$/;

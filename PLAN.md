@@ -2,7 +2,7 @@
 
 ## Product and UX
 
-Retain the focused MVP: describe a dataset, define a flat record shape, select 1–50 records, generate and validate data, preview it, and export JSON or CSV. Defer authentication, persistence, history, raw JSON Schema editing, nested fields, model selection, provider fallback, automatic retries, and batch generation.
+Retain the focused MVP: describe a dataset, define a flat record shape, select 1–25 records, generate and validate data, preview it, and export JSON or CSV. Defer authentication, persistence, history, raw JSON Schema editing, nested fields, model selection, provider fallback, general automatic retries (generation makes at most one top-up call for missing records, see Architecture), and batch generation.
 
 Use a two-pane workspace: the request form and field builder beside the results on large screens, stacked on smaller ones. Results can be viewed as a table or as the exported JSON. A blank form offers three example presets (Customers, Orders, Employees) under the description box; Clear form, with Undo, resets the request without discarding results; Ctrl/Cmd+Enter in the description generates. A field row contains:
 
@@ -11,7 +11,7 @@ Use a two-pane workspace: the request form and field builder beside the results 
 - Nullable toggle
 - Optional guidance: up to 160 characters
 
-A nullable field is still present on every record. It is either its declared primitive type or `null`; it is not omitted. This matches Groq strict mode’s requirement that all properties be required while allowing null through a union type. [Groq Structured Outputs](https://console.groq.com/docs/structured-outputs)
+A nullable field is still present on every record. It is either its declared primitive type or `null`; it is not omitted. The record schema shown to the model marks every field required and allows null through a union type.
 
 Display null cells as `null` and empty strings as `""` in the preview so users can distinguish them.
 
@@ -21,14 +21,14 @@ Validate these limits on both client and server; server validation is authoritat
 
 | Input                 |                                                  Limit |
 | --------------------- | -----------------------------------------------------: |
-| Records               |                                                   1–50 |
+| Records               |                                                   1–25 |
 | Fields                |                                                    1–8 |
 | Dataset description   |                                     1–1,000 characters |
 | Field guidance        |                             0–160 characters per field |
 | Field name            |                       1–40 ASCII identifier characters |
 | JSON request body     |                                                  8 KiB |
-| Returned string value |                                64 characters per value |
-| Provider completion   | 6,000 tokens maximum, subject to current model support |
+| Returned string value |  100 characters per value (the prompt asks for at most 64) |
+| Provider completion   | 200 + records × (fields × 26 + 10) tokens; 5,650 for 25 × 8 |
 
 Use these types:
 
@@ -55,7 +55,7 @@ type GenerateSuccess = {
 };
 ```
 
-The server creates a strict schema containing a `records` array. Each field remains required and closed to undeclared properties. A nullable string, for example, is represented as `type: ["string", "null"]`. The server validates the parsed response again, including exact record count, field set, declared types, nullability, and string length.
+The model writes JSON Lines: one compact JSON object per line, described by a per-record JSON Schema in the prompt. Each field is required and the record is closed to undeclared properties; a nullable string, for example, is `type: ["string", "null"]`. The server validates every line on its own (field set, declared types, safe integers, nullability, string length), keeps valid records unchanged, skips anything else, and returns exactly the requested number of records or an error.
 
 JSON export preserves JavaScript `null` as JSON `null`.
 
@@ -75,13 +75,16 @@ For example, a nullable `nickname` of `null` exports as an empty field, while `"
 - Use platform `fetch` and focused hand-written runtime validation for the constrained field model. Do not add an LLM SDK, database, or schema-validation library.
 - UI libraries: use `lucide-react` for icons and `motion` (imported from `motion/react`) for animations. Install each only when a task uses it. Keep animations subtle and purposeful, and respect reduced-motion preferences.
 - Configure the application model as the server-side constant `openai/gpt-oss-120b`. This is the application's runtime model and is unrelated to the coding assistant used for development.
-- Groq’s current documentation lists `openai/gpt-oss-120b` as supporting strict JSON Schema structured outputs. Confirm the model is active for the target account, repeat the smoke test using the final nullable schema, and inspect account-specific quotas before implementation. [Structured Outputs](https://console.groq.com/docs/structured-outputs), [models](https://console.groq.com/docs/models), [rate limits](https://console.groq.com/docs/rate-limits)
-- Set `reasoning_effort: "low"` and `include_reasoning: false` on the Groq request (supported by `openai/gpt-oss-120b` per Groq's reasoning docs). Groq's docs do not say whether reasoning tokens count toward `max_completion_tokens`, and strict mode does not document `maxLength`, `minItems`, or `maxItems`; the exact record count and 64-character string cap are therefore enforced only by our own output validation. Measure token usage and the violation rate in the smoke test before deciding whether retries are needed (retries remain deferred until then).
+- Do not use Groq Structured Outputs (`response_format`) for generation. Groq documents strict mode as constrained decoding for `openai/gpt-oss-120b`, but measurements in milestone 3 show it only validates afterwards: wrong counts, missing fields, forbidden keys and malformed JSON all reached Groq's check, which then rejects the whole reply (400 `json_validate_failed`), on both Chat Completions and the Responses API. [Structured Outputs](https://console.groq.com/docs/structured-outputs)
+- Send the rules as a `developer` message (where gpt-oss's harmony format expects instructions), ending with the record schema in a `# Response Formats` section, and the request as JSON in the user message. Ask for JSON Lines so a slip costs one record, not the reply. [OpenAI harmony format](https://developers.openai.com/cookbook/articles/openai-harmony)
+- Set `reasoning_effort: "low"` and `include_reasoning: false`. Groq's API reference states the output cap includes reasoning tokens (about 15–80 per request at `low`), so the cap formula allows for them.
+- Generation makes one request for all records, then at most one top-up for the records still missing (asking it not to repeat the first string field's values), only when Groq's `x-ratelimit-*` headers show enough of the per-minute token budget within 15 s and the request still fits a 55 s time budget. Otherwise it fails with `INVALID_GENERATION`.
+- Account limits measured from headers (free tier): 8,000 tokens per minute and 1,000 requests per day; Groq does not report the daily token budget in headers.
 - Add a `tsconfig.api.json` project (referenced from `tsconfig.json`) so `npm run build` type-checks `api/`, which imports the shared contract and validation from `src/lib/`.
 - Preserve `npm run dev` as the normal Vite-only frontend server. It does not serve `api/generate.ts`. Until the UI is connected to the API, and afterwards behind a dev-only flag, the UI generates data through a local mock generator behind the same `generate(request)` function, so UI work needs no Vercel or Groq access.
 - Add the Vercel CLI as a development dependency and a separate `dev:vercel` script running `vercel dev`. Run this command from the project root when testing the integrated frontend and `/api/generate` together; it starts the configured Vite development command and emulates Vercel Functions. Link the project and obtain local environment variables with Vercel’s supported workflow before live calls. [Vercel local development](https://vercel.com/docs/cli/dev), [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite)
 - Before public deployment, configure a Vercel Firewall rate-limit rule for `POST /api/generate`: 2 requests per IP per 10-minute fixed window, returning 429. Test it first in logging mode, then enforce it. This needs no application dependency or persistent store. [Vercel WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting)
-- Create and use a Groq project-specific key. Set conservative project limits at or below the organization’s available limits, initially targeting 100 requests/day and a token ceiling compatible with the account’s current free-tier allocation. The exact settings must be confirmed in the account because published limits are not account-specific.
+- Create and use a Groq project-specific key. Set conservative project limits at or below the organization’s available limits, initially targeting 100 requests/day. Groq projects can cap requests per model, but token limits apply only at the organization level and cannot be set per project. The exact settings must be confirmed in the account because published limits are not account-specific.
 - The record and request limits, Vercel per-IP rule, and Groq project quota form the MVP’s bounded-usage control. An unauthenticated public endpoint cannot guarantee a global per-user usage budget against distributed abuse; do not publicly launch if the account cannot enforce an acceptable project-level quota.
 
 ## Implementation milestones
@@ -147,33 +150,46 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Acceptance: the request pane stays usable at 375px and 1440px with the command bar always reachable; field problems never shift the rows; presets, Clear/Undo and the shortcut work by keyboard; every state reads well in both palettes and with reduced motion.
    - Checks: lint, build, tests (presets, field and counter helpers, shortcut), and Playwright browser checks in both palettes at desktop and phone widths.
 
-3. **Server generation contract** — ⏳ in progress
+3. **Server generation contract** — ✅ done
    1. ✅ Scaffold: Vercel CLI (`dev:vercel`), `tsconfig.api.json`, `api/generate.ts` delegating to `src/server/handler.ts`, which rejects wrong methods (405), bodies over 8 KiB (413), non-JSON content types (415), malformed JSON and invalid requests (400) before any provider call; error messages shared with the mock via `GENERATION_ERROR_MESSAGES`. Verified under `vercel dev`.
-   2. ✅ Strict response schema (`response-schema.ts`: closed objects, all fields required, nullable as a type union, guidance kept out of the schema), prompt (`prompt.ts`: rules in the system message, the request as JSON data in the user message) and output validator (`output-validation.ts`: exact shape, count and field set, declared types, safe integers, nullability, 64 code points per string; records rebuilt in field order; a failure reason for logging).
-   3. ✅ Groq call (`groq.ts`: strict `json_schema`, `reasoning_effort: "low"`, `include_reasoning: false`, 6,000-token cap, 45 s timeout) and sanitized error mapping: provider 401/403/404 → 500 `CONFIGURATION_ERROR`; 429 → 429 `RATE_LIMITED` with `retryAfterSeconds` and `Retry-After`; 400 `json_validate_failed`, a `finish_reason` other than `stop` or failed output validation → 502 `INVALID_GENERATION`; other provider errors, timeouts and network failures → 502 `UPSTREAM_ERROR`. One JSON log line per call (outcome, reason, provider status, finish reason, token usage, counts, duration; never the key, request text or data). Live check through `vercel dev`: Customers × 5 returned valid records (661 prompt, 527 completion incl. 59 reasoning tokens, 1.5 s); Groq answers an invalid key with 401.
+   2. ✅ Schema, prompt and output validator (first version: strict `json_schema` response with a `records` array; replaced in 3.4).
+   3. ✅ Groq call and sanitized error mapping: provider 401/403/404 → 500 `CONFIGURATION_ERROR`; 429 → 429 `RATE_LIMITED` with `retryAfterSeconds` and `Retry-After`; other provider errors, timeouts and network failures → 502 `UPSTREAM_ERROR`; too few valid records → 502 `INVALID_GENERATION`. One JSON log line per provider call (outcome, attempt, requested and valid records, skipped lines by problem, finish reason, token usage, counts, duration; never the key, request text or data). Groq answers an invalid key with 401.
       - Key storage: `vercel dev` (CLI 64.1.0) passes functions only `.env`, not `.env.local`, so the development key lives in a git-ignored `.env`. Vercel Secrets cannot be read back for local use, so the Development environment on Vercel stays empty.
-   4. ⏳ Smoke test of a maximum-size request; record results; close the milestone.
-   - Add `api/generate.ts` and `tsconfig.api.json`, shared authoritative validation, strict-schema generation with nullable union types, Groq request handling (`reasoning_effort: "low"`, `include_reasoning: false`), output validation, completion-token cap, and sanitized error mapping. Unit-test the schema builder and output validator.
+   4. ✅ Smoke tests and redesign (`npm run smoke`, stress and realistic requests).
+      - With strict `json_schema` at 50 records: the stress request returned the wrong record count in 10 of 11 runs (every count logged was an overshoot, 55–65); `minItems`/`maxItems` and fixed record keys (`r01`…) were not enforced either (Groq rejected after generating), and fixed keys added ~105 prompt tokens per record. Realistic requests passed 9/9.
+      - Probes showed strict mode does not constrain gpt-oss on Groq (forbidden keys and empty output under `strict: true`, same behaviour with `strict: false` and via the Responses API).
+      - A/B at 25 records: JSON Lines without `response_format` completed 7/7 replies against 6/7 for the strict array, with ~30% fewer output tokens (~65–70 per 8-field record) and ~25% faster; record quality and duplicates were equal (0 duplicates).
+      - String length: the model writes 10–25% longer than asked; prompt wording could not keep it under 64 without halving requested lengths, so the hard cap is 100 with 64 as the prompt target (no string over 89 in ~130 records).
+      - Final run through `vercel dev` (25 × 8): 8/8 succeeded; 7 on the first call, 1 with a 2-record top-up; ~730 prompt + 1,700–1,850 output tokens, 4–6 s per request.
    - Acceptance: malformed, oversized, and out-of-range requests fail before Groq; invalid output is never returned; no credential reaches the browser.
-   - Checks: lint, build, tests, local endpoint requests through `vercel dev`, and a smoke test recording token usage and count/length violation rates for a maximum-size request.
+   - Checks: lint, build, tests, local endpoint requests through `vercel dev`, and smoke tests recording token usage and validity rates.
 
 4. **End-to-end integration and deployment readiness** — ⏳ not started
    - Create a second Groq key for production and store it as a Vercel Secret (`vercel env add GROQ_API_KEY production --sensitive`, run outside the assistant session), plus Preview if previews should generate live data.
    - Switch `generate()` to call `/api/generate` (keeping the mock behind a dev-only flag); configure the Vercel local-development command, environment workflow, Vercel Firewall rule, Groq project key and quota, and concise README instructions.
-   - Acceptance: a live request through `vercel dev` returns 1–50 validated records using `openai/gpt-oss-120b`; preview and both exports match the response; rate-limit and provider errors produce safe, actionable UI states.
-   - Checks: lint, build, tests, Groq structured-output smoke test, local Vercel-function test, and Vercel preview verification.
+   - Acceptance: a live request through `vercel dev` returns 1–25 validated records using `openai/gpt-oss-120b`; preview and both exports match the response; rate-limit and provider errors produce safe, actionable UI states.
+   - Checks: lint, build, tests, smoke test, local Vercel-function test, and Vercel preview verification.
+   - Current state (end of milestone 3): the folder is linked to the Vercel project `mockdata-foundry` (`.vercel/`, git-ignored); `.env` holds the development `GROQ_API_KEY` (Groq project "mockdata-foundry"); no production key exists yet; the GitHub repository is not connected to Vercel, so pushes do not deploy; nothing has been deployed.
+   - Open questions to settle at the start of the milestone:
+     - How the browser checks the `/api/generate` response before showing it (a small hand-written check of the `GenerateResponse` shape; no schema library).
+     - Name and behaviour of the dev-only flag that keeps the mock generator, and whether `DevTools.tsx` keeps forcing mock outcomes.
+     - How the UI shows `RATE_LIMITED` with `retryAfterSeconds` (from Groq or from the firewall rule), and the copy for `INVALID_GENERATION` now that a top-up has already been tried.
+     - Whether to connect the GitHub repository for automatic preview deployments.
+     - Whether the 2-requests-per-10-minutes firewall rule suits a demo, given that one generation uses ~2.5K of the 8,000 tokens per minute.
+     - The 33 `npm audit` findings come from the Vercel CLI's own dependencies (dev-only, never shipped); they were accepted in milestone 3. Re-check when upgrading the CLI.
 
 ## Post-MVP ideas
 
 Not part of the MVP; recorded so they are not lost.
 
-- **Choice field type** (a fixed list of allowed values): constrains output to specified values. Verify that Groq strict mode supports `enum` before committing to it.
-- **Date / date-time field type**: add a format check in our own output validation, since strict mode may not enforce `format`. Until then, use a `string` field with guidance such as "ISO 8601 date".
+- **Choice field type** (a fixed list of allowed values): list the values in the record schema and check them in our own validation (Groq strict mode does not enforce schemas for gpt-oss).
+- **Date / date-time field type**: add a format check in our own output validation. Until then, use a `string` field with guidance such as "ISO 8601 date".
 - Email, UUID, and phone formats stay as field guidance, not types.
 
 ## Remaining decisions and prerequisites
 
-- Confirm the target Groq account can apply the proposed 100-request/day project cap and supports the required output-token budget on its current tier.
+- Confirm the target Groq account can apply the proposed 100-request/day project cap. The free tier's 8,000 tokens per minute fits about three 25-record generations per minute.
 - Confirm Vercel Firewall rate limiting is available and acceptable for the target Vercel plan before exposing the endpoint publicly.
 - Approve the Vercel CLI (to run and test the root-level Vercel Function locally) as the only new development dependency still to be added; Vitest is already installed. `lucide-react` and `motion` are installed.
-- After the Milestone 3 smoke test, revisit whether the 8-field limit and the 2-requests-per-10-minutes firewall rule suit a portfolio demo; neither is changed yet.
+- The record limit was lowered to 25 after the milestone 3 smoke tests (the firewall-rule question is listed under milestone 4).
+- If Groq fixes constrained decoding for gpt-oss, or the model changes, re-measure strict `json_schema` against JSON Lines before switching.

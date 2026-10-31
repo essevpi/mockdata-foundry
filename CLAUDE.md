@@ -8,7 +8,7 @@ When a change affects the commands, project layout, conventions or dependency ru
 
 ## Stack
 
-React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the provisional LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. The Vercel Function is being built (milestone 3) and the UI still uses the mock; the Groq call is not integrated yet (progress in `PLAN.md`).
+React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. The Vercel Function calls Groq (milestone 3), but the UI still uses the mock until milestone 4 (progress in `PLAN.md`).
 
 ## Project Layout
 
@@ -24,7 +24,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-re
 - `src/features/theme/`: `ThemeToggle.tsx` and pure `theme-utils.ts` (stored-theme parsing)
 - `src/index.css`: Tailwind import and theme tokens
 - `api/generate.ts`: the Vercel Function entry (`POST /api/generate`); only reads `process.env` and delegates to `src/server/`. Every file in `api/` becomes a function, so keep shared code out of it.
-- `src/server/`: environment-free server logic (`handler.ts` validates requests, calls Groq through `groq.ts`, maps outcomes to the error envelope and logs one usage line per call; `response-schema.ts`, `prompt.ts` and `output-validation.ts` build the Groq schema and messages and check its output), unit-tested with an injected `fetch`. Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
+- `src/server/`: environment-free server logic, unit-tested with an injected `fetch`. `handler.ts` validates requests, calls Groq through `groq.ts`, maps outcomes to the error envelope and logs one usage line per provider call; `prompt.ts` builds the developer/user messages (JSON Lines, with the `record-schema.ts` schema as a `# Response Formats` section); `record-lines.ts` validates the reply line by line; `top-up.ts` decides whether one follow-up call for missing records fits Groq's per-minute budget. Generation does not use Groq's `response_format` (see `PLAN.md`). Type-checked by `tsconfig.api.json` (Node ESM), not `tsconfig.app.json`: relative imports here and in `api/` need `.js` extensions, as Vercel's runtime requires.
 
 ## Code Organization
 

@@ -3,19 +3,25 @@ import {
   REQUEST_LIMITS,
   validateGenerateRequest,
   type GenerationErrorCode,
+  type PrimitiveValue,
 } from '../lib/generation.js';
-import { callGroq, type GroqUsage } from './groq.js';
-import { validateGeneratedOutput } from './output-validation.js';
+import { callGroq, getMaxCompletionTokens, type GroqUsage } from './groq.js';
+import type { AvoidValues } from './prompt.js';
+import { parseRecordLines, type LineProblem } from './record-lines.js';
+import { getAvoidValues, getTopUpDelayMs } from './top-up.js';
 
-// One entry per request that passed validation. It holds counts and outcomes only: never the
-// API key, the description, field guidance or generated values.
+// One entry per provider call (or per early configuration failure). It holds counts and
+// outcomes only: never the API key, the description, field guidance or generated values.
+// "partial" means a top-up call follows; the last entry of a request carries its status.
 export type GenerateLogEntry = {
-  outcome: 'success' | GenerationErrorCode;
-  status: number;
+  outcome: 'success' | 'partial' | GenerationErrorCode;
+  status?: number;
+  attempt?: number;
   reason?: string;
-  receivedRecords?: number;
-  droppedRecords?: number;
   providerStatus?: number;
+  requestedRecords?: number;
+  validRecords?: number;
+  skippedLines?: Partial<Record<LineProblem, number>>;
   finishReason?: string | null;
   usage?: GroqUsage;
   records: number;
@@ -27,7 +33,15 @@ export type GenerateHandlerDeps = {
   apiKey: string | undefined;
   fetch: typeof fetch;
   log: (entry: GenerateLogEntry) => void;
+  sleep?: (ms: number) => Promise<void>;
 };
+
+// Prompt tokens assumed for a top-up when the first reply reported none, and the extra
+// allowance for the list of values it must not repeat.
+const FALLBACK_PROMPT_TOKENS = 1_000;
+const AVOID_LIST_TOKENS = 300;
+
+const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const RESPONSE_HEADERS = {
   'Cache-Control': 'no-store',
@@ -118,42 +132,67 @@ export async function handleGenerate(
     return errorResponse('CONFIGURATION_ERROR');
   }
 
-  const result = await callGroq(generateRequest, { apiKey: deps.apiKey, fetch: deps.fetch });
+  const groqDeps = { apiKey: deps.apiKey, fetch: deps.fetch };
+  const sleep = deps.sleep ?? defaultSleep;
+  const records: Array<Record<string, PrimitiveValue>> = [];
+  let attemptRequest = generateRequest;
+  let avoid: AvoidValues | undefined;
 
-  if (!result.ok) {
-    const { code, providerStatus, reason, retryAfterSeconds } = result.failure;
+  // One request for all records, then at most one top-up for the ones still missing, only when
+  // Groq's per-minute token budget and the time budget allow it.
+  for (let attempt = 1; ; attempt += 1) {
+    const result = await callGroq(attemptRequest, groqDeps, avoid);
 
-    log({ outcome: code, status: STATUS_BY_CODE[code], reason, providerStatus });
+    if (!result.ok) {
+      const { code, providerStatus, reason, retryAfterSeconds } = result.failure;
 
-    return errorResponse(code, { retryAfterSeconds });
+      log({ outcome: code, status: STATUS_BY_CODE[code], attempt, reason, providerStatus });
+
+      return errorResponse(code, { retryAfterSeconds });
+    }
+
+    const parsed = parseRecordLines(result.content, generateRequest.fields);
+    const missingBefore = generateRequest.count - records.length;
+
+    // Surplus records beyond the requested count are dropped; kept records are unchanged.
+    records.push(...parsed.records.slice(0, missingBefore));
+
+    const missing = generateRequest.count - records.length;
+    const attemptLog = {
+      attempt,
+      requestedRecords: attemptRequest.count,
+      validRecords: parsed.records.length,
+      skippedLines: parsed.skipped,
+      finishReason: result.finishReason,
+      usage: result.usage,
+    };
+
+    if (missing === 0) {
+      log({ outcome: 'success', status: 200, ...attemptLog });
+
+      return Response.json({ records }, { status: 200, headers: RESPONSE_HEADERS });
+    }
+
+    const neededTokens =
+      (result.usage.promptTokens ?? FALLBACK_PROMPT_TOKENS) +
+      AVOID_LIST_TOKENS +
+      getMaxCompletionTokens(missing, generateRequest.fields.length);
+    const delayMs =
+      attempt === 1 ? getTopUpDelayMs(result.rateLimit, neededTokens, Date.now() - startedAt) : undefined;
+
+    if (delayMs === undefined) {
+      log({ outcome: 'INVALID_GENERATION', status: 502, reason: 'too_few_records', ...attemptLog });
+
+      return errorResponse('INVALID_GENERATION');
+    }
+
+    log({ outcome: 'partial', ...attemptLog });
+
+    if (delayMs > 0) {
+      await sleep(delayMs);
+    }
+
+    attemptRequest = { ...generateRequest, count: missing };
+    avoid = getAvoidValues(generateRequest, records);
   }
-
-  const { content, finishReason, usage } = result;
-
-  // A truncated or otherwise unfinished completion is discarded even if it happens to parse.
-  const output =
-    finishReason === 'stop'
-      ? validateGeneratedOutput(content ?? '', generateRequest)
-      : {
-          ok: false as const,
-          reason: `finish_reason_${finishReason ?? 'missing'}`,
-          receivedRecords: undefined,
-        };
-
-  if (!output.ok) {
-    log({
-      outcome: 'INVALID_GENERATION',
-      status: 502,
-      reason: output.reason,
-      receivedRecords: output.receivedRecords,
-      finishReason,
-      usage,
-    });
-
-    return errorResponse('INVALID_GENERATION');
-  }
-
-  log({ outcome: 'success', status: 200, droppedRecords: output.droppedRecords, finishReason, usage });
-
-  return Response.json({ records: output.records }, { status: 200, headers: RESPONSE_HEADERS });
 }

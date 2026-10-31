@@ -110,9 +110,9 @@ describe('tokenizeJsonLines', () => {
     expect(lines[1].some((token) => token.kind === 'plain' && token.text === '???')).toBe(true);
   });
 
-  it('handles the largest export: 50 records with 8 fields', () => {
+  it('handles the largest export: 25 records with 8 fields', () => {
     const columns = Array.from({ length: 8 }, (_, index) => `field${index + 1}`);
-    const records = Array.from({ length: 50 }, (_, row) =>
+    const records = Array.from({ length: 25 }, (_, row) =>
       Object.fromEntries(
         columns.map((column, index): [string, PrimitiveValue] => [
           column,
@@ -123,7 +123,7 @@ describe('tokenizeJsonLines', () => {
     const json = toJson(records, columns);
     const lines = tokenizeJsonLines(json);
 
-    expect(lines).toHaveLength(2 + 50 * (8 + 2));
+    expect(lines).toHaveLength(2 + 25 * (8 + 2));
     expect(`${joinLines(lines)}\n`).toBe(json);
   });
 });

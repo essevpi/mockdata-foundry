@@ -1,14 +1,21 @@
 import { isRecord, type GenerateRequest, type GenerationErrorCode } from '../lib/generation.js';
-import { buildMessages } from './prompt.js';
-import { RESPONSE_SCHEMA_NAME, buildResponseSchema } from './response-schema.js';
+import { buildMessages, type AvoidValues } from './prompt.js';
 
 export const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
 export const GROQ_MODEL = 'openai/gpt-oss-120b';
-// A maximum-size request (50 × 8) uses ~4.5–5.8K completion tokens, more when the model
-// overshoots the record count. With a ~700-token prompt, 7,000 still fits the free tier's
-// 8,000 tokens per minute.
-export const MAX_COMPLETION_TOKENS = 7_000;
-export const GROQ_TIMEOUT_MS = 45_000;
+export const GROQ_TIMEOUT_MS = 20_000;
+
+// Records are requested as JSON Lines without response_format. Groq's strict json_schema mode
+// does not constrain gpt-oss-120b: it validates afterwards and rejects the whole reply on any
+// slip, so one bad value cost every record. See PLAN.md (milestone 3) for the measurements.
+//
+// Output budget per request, reasoning included: measured ~65–75 tokens per 8-field record
+// plus ~50 reasoning tokens. 26 tokens per field leaves room for long field names and strings
+// up to the 100-character cap while keeping prompt + cap for 25 × 8 (~6.5K) within the free
+// tier's 8,000 tokens per minute.
+export function getMaxCompletionTokens(count: number, fieldCount: number): number {
+  return 200 + count * (fieldCount * 26 + 10);
+}
 
 export type GroqUsage = {
   promptTokens?: number;
@@ -16,15 +23,28 @@ export type GroqUsage = {
   reasoningTokens?: number;
 };
 
+// Groq's per-minute token budget, read from its x-ratelimit-* response headers.
+export type GroqRateLimit = {
+  limitTokens?: number;
+  remainingTokens?: number;
+  resetTokensMs?: number;
+};
+
 export type GroqFailure = {
-  code: Exclude<GenerationErrorCode, 'INVALID_REQUEST'>;
+  code: Exclude<GenerationErrorCode, 'INVALID_REQUEST' | 'INVALID_GENERATION'>;
   reason: string;
   providerStatus?: number;
   retryAfterSeconds?: number;
 };
 
 export type GroqCallResult =
-  | { ok: true; content: string | null; finishReason: string | null; usage: GroqUsage }
+  | {
+      ok: true;
+      content: string;
+      finishReason: string | null;
+      usage: GroqUsage;
+      rateLimit: GroqRateLimit;
+    }
   | { ok: false; failure: GroqFailure };
 
 export type GroqCallDeps = {
@@ -32,21 +52,13 @@ export type GroqCallDeps = {
   fetch: typeof fetch;
 };
 
-export function buildGroqBody(request: GenerateRequest) {
+export function buildGroqBody(request: GenerateRequest, avoid?: AvoidValues) {
   return {
     model: GROQ_MODEL,
-    messages: buildMessages(request),
-    response_format: {
-      type: 'json_schema',
-      json_schema: {
-        name: RESPONSE_SCHEMA_NAME,
-        strict: true,
-        schema: buildResponseSchema(request.fields),
-      },
-    },
+    messages: buildMessages(request, avoid),
     reasoning_effort: 'low',
     include_reasoning: false,
-    max_completion_tokens: MAX_COMPLETION_TOKENS,
+    max_completion_tokens: getMaxCompletionTokens(request.count, request.fields.length),
   };
 }
 
@@ -58,24 +70,45 @@ function readString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+function readHeaderNumber(headers: Headers, name: string): number | undefined {
+  const value = headers.get(name);
+  const number = Number(value);
+
+  return value !== null && value !== '' && Number.isFinite(number) ? number : undefined;
+}
+
 export function parseRetryAfter(value: string | null): number | undefined {
   const seconds = Number(value);
 
   return value !== null && Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : undefined;
 }
 
-async function readProviderErrorCode(response: Response): Promise<string | undefined> {
-  try {
-    const body: unknown = await response.json();
-
-    return isRecord(body) && isRecord(body.error) ? readString(body.error.code) : undefined;
-  } catch {
+// Parses Groq's reset durations such as "705ms", "7.66s" or "1m2.5s" into milliseconds.
+export function parseResetDuration(value: string | null): number | undefined {
+  if (!value || !/^(\d+(\.\d+)?(ms|h|m|s))+$/.test(value)) {
     return undefined;
   }
+
+  const unitMs: Record<string, number> = { h: 3_600_000, m: 60_000, s: 1_000, ms: 1 };
+  let total = 0;
+
+  for (const [, amount, , unit] of value.matchAll(/(\d+(\.\d+)?)(ms|h|m|s)/g)) {
+    total += Number(amount) * unitMs[unit];
+  }
+
+  return Math.ceil(total);
+}
+
+function readRateLimit(headers: Headers): GroqRateLimit {
+  return {
+    limitTokens: readHeaderNumber(headers, 'x-ratelimit-limit-tokens'),
+    remainingTokens: readHeaderNumber(headers, 'x-ratelimit-remaining-tokens'),
+    resetTokensMs: parseResetDuration(headers.get('x-ratelimit-reset-tokens')),
+  };
 }
 
 // Maps a non-2xx Groq response to a sanitized failure. Provider messages are never passed on.
-async function classifyErrorResponse(response: Response): Promise<GroqFailure> {
+function classifyErrorResponse(response: Response): GroqFailure {
   const providerStatus = response.status;
 
   if (providerStatus === 401 || providerStatus === 403 || providerStatus === 404) {
@@ -89,13 +122,6 @@ async function classifyErrorResponse(response: Response): Promise<GroqFailure> {
       providerStatus,
       retryAfterSeconds: parseRetryAfter(response.headers.get('retry-after')),
     };
-  }
-
-  // Groq answers with this code when the output fails the schema, including when the
-  // completion hits max_completion_tokens mid-JSON (it does not return finish_reason
-  // "length" in strict mode). Treat it as a generation failure, not a provider outage.
-  if (providerStatus === 400 && (await readProviderErrorCode(response)) === 'json_validate_failed') {
-    return { code: 'INVALID_GENERATION', reason: 'provider_schema_validation', providerStatus };
   }
 
   return { code: 'UPSTREAM_ERROR', reason: 'provider_error', providerStatus };
@@ -118,6 +144,7 @@ function readUsage(value: unknown): GroqUsage {
 export async function callGroq(
   request: GenerateRequest,
   { apiKey, fetch: fetchFn }: GroqCallDeps,
+  avoid?: AvoidValues,
 ): Promise<GroqCallResult> {
   let response: Response;
 
@@ -128,7 +155,7 @@ export async function callGroq(
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(buildGroqBody(request)),
+      body: JSON.stringify(buildGroqBody(request, avoid)),
       signal: AbortSignal.timeout(GROQ_TIMEOUT_MS),
     });
   } catch (error) {
@@ -138,7 +165,7 @@ export async function callGroq(
   }
 
   if (!response.ok) {
-    return { ok: false, failure: await classifyErrorResponse(response) };
+    return { ok: false, failure: classifyErrorResponse(response) };
   }
 
   let body: unknown;
@@ -160,8 +187,9 @@ export async function callGroq(
 
   return {
     ok: true,
-    content: readString(choice.message.content) ?? null,
+    content: readString(choice.message.content) ?? '',
     finishReason: readString(choice.finish_reason) ?? null,
     usage: readUsage(body.usage),
+    rateLimit: readRateLimit(response.headers),
   };
 }

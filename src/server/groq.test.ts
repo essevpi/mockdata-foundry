@@ -3,12 +3,12 @@ import type { GenerateRequest } from '../lib/generation.js';
 import {
   GROQ_CHAT_COMPLETIONS_URL,
   GROQ_MODEL,
-  MAX_COMPLETION_TOKENS,
   buildGroqBody,
   callGroq,
+  getMaxCompletionTokens,
+  parseResetDuration,
   parseRetryAfter,
 } from './groq.js';
-import { buildResponseSchema } from './response-schema.js';
 
 const request: GenerateRequest = {
   description: 'Customers',
@@ -34,24 +34,30 @@ function jsonResponse(body: unknown, init: ResponseInit = {}) {
 }
 
 describe('buildGroqBody', () => {
-  it('requests strict structured output from the configured model', () => {
+  it('requests JSON Lines from the configured model with low reasoning effort', () => {
     const body = buildGroqBody(request);
 
     expect(body).toMatchObject({
       model: GROQ_MODEL,
-      response_format: {
-        type: 'json_schema',
-        json_schema: { strict: true, schema: buildResponseSchema(request.fields) },
-      },
       reasoning_effort: 'low',
       include_reasoning: false,
-      max_completion_tokens: MAX_COMPLETION_TOKENS,
+      max_completion_tokens: getMaxCompletionTokens(2, 1),
     });
-    expect(body.messages.map((message) => message.role)).toEqual(['system', 'user']);
+    expect(body.messages.map((message) => message.role)).toEqual(['developer', 'user']);
   });
 
-  it('does not set reasoning_format, which conflicts with include_reasoning', () => {
-    expect(buildGroqBody(request)).not.toHaveProperty('reasoning_format');
+  it('does not send response_format or reasoning_format', () => {
+    const body = buildGroqBody(request);
+
+    expect(body).not.toHaveProperty('response_format');
+    expect(body).not.toHaveProperty('reasoning_format');
+  });
+});
+
+describe('getMaxCompletionTokens', () => {
+  it('scales with records and fields', () => {
+    expect(getMaxCompletionTokens(1, 1)).toBe(236);
+    expect(getMaxCompletionTokens(25, 8)).toBe(5_650);
   });
 });
 
@@ -65,6 +71,20 @@ describe('parseRetryAfter', () => {
     ['soon', undefined],
   ])('parses %j as %j', (value, expected) => {
     expect(parseRetryAfter(value)).toBe(expected);
+  });
+});
+
+describe('parseResetDuration', () => {
+  it.each([
+    ['705ms', 705],
+    ['7.66s', 7_660],
+    ['1m2.5s', 62_500],
+    ['1h', 3_600_000],
+    [null, undefined],
+    ['', undefined],
+    ['soon', undefined],
+  ])('parses %j as %j', (value, expected) => {
+    expect(parseResetDuration(value)).toBe(expected);
   });
 });
 
@@ -82,24 +102,41 @@ describe('callGroq', () => {
     expect(init?.signal).toBeInstanceOf(AbortSignal);
   });
 
-  it('returns the completion content, finish reason and usage', async () => {
+  it('returns the content, finish reason, usage and rate-limit budget', async () => {
     const fetchSpy = fakeFetch(
-      jsonResponse({
-        choices: [{ message: { content: '{"records":[]}' }, finish_reason: 'stop' }],
-        usage: {
-          prompt_tokens: 400,
-          completion_tokens: 900,
-          completion_tokens_details: { reasoning_tokens: 120 },
+      jsonResponse(
+        {
+          choices: [{ message: { content: '{"email":"a@mail.test"}' }, finish_reason: 'stop' }],
+          usage: {
+            prompt_tokens: 400,
+            completion_tokens: 900,
+            completion_tokens_details: { reasoning_tokens: 120 },
+          },
         },
-      }),
+        {
+          headers: {
+            'x-ratelimit-limit-tokens': '8000',
+            'x-ratelimit-remaining-tokens': '6500',
+            'x-ratelimit-reset-tokens': '11.25s',
+          },
+        },
+      ),
     );
 
     expect(await callGroq(request, { apiKey: 'k', fetch: fetchSpy })).toEqual({
       ok: true,
-      content: '{"records":[]}',
+      content: '{"email":"a@mail.test"}',
       finishReason: 'stop',
       usage: { promptTokens: 400, completionTokens: 900, reasoningTokens: 120 },
+      rateLimit: { limitTokens: 8_000, remainingTokens: 6_500, resetTokensMs: 11_250 },
     });
+  });
+
+  it('treats missing content as empty', async () => {
+    const fetchSpy = fakeFetch(jsonResponse({ choices: [{ message: {}, finish_reason: 'length' }] }));
+    const result = await callGroq(request, { apiKey: 'k', fetch: fetchSpy });
+
+    expect(result).toMatchObject({ ok: true, content: '', finishReason: 'length', rateLimit: {} });
   });
 
   it.each([
@@ -135,18 +172,6 @@ describe('callGroq', () => {
         providerStatus: 429,
         retryAfterSeconds: 12,
       },
-    });
-  });
-
-  it('maps a provider schema validation failure to INVALID_GENERATION', async () => {
-    const fetchSpy = fakeFetch(
-      jsonResponse({ error: { message: 'bad json', code: 'json_validate_failed' } }, { status: 400 }),
-    );
-    const result = await callGroq(request, { apiKey: 'k', fetch: fetchSpy });
-
-    expect(result).toEqual({
-      ok: false,
-      failure: expect.objectContaining({ code: 'INVALID_GENERATION' }),
     });
   });
 

@@ -1,23 +1,22 @@
-// Smoke test for POST /api/generate with a maximum-size request (50 records × 8 fields).
+// Smoke test for POST /api/generate with a maximum-size request (25 records × 8 fields).
 // Run `npm run dev:vercel` first, then `npm run smoke`. Token usage and failure reasons are
 // in the server's `"event":"generate"` log lines; this script prints status and timing.
 //
 // SMOKE_REQUEST picks the request: "stress" (default; long strings at the size limit) or
-// "customers" (the Customers preset at 50 records, a typical request).
-// SMOKE_RUNS (default 8), SMOKE_DELAY_SECONDS (default 65) and SMOKE_URL can be overridden.
-// The delay keeps one maximum-size request per minute, within Groq's per-minute token limit.
+// "customers" (the Customers preset at 25 records, a typical request).
+// SMOKE_RUNS (default 8), SMOKE_DELAY_SECONDS (default 35) and SMOKE_URL can be overridden.
+// The delay keeps requests (and any top-up) within Groq's 8,000 tokens per minute.
 
 const url = process.env.SMOKE_URL ?? 'http://localhost:3000/api/generate';
 const runs = Number(process.env.SMOKE_RUNS ?? 8);
-const delaySeconds = Number(process.env.SMOKE_DELAY_SECONDS ?? 65);
+const delaySeconds = Number(process.env.SMOKE_DELAY_SECONDS ?? 35);
 
-// Long string guidance on purpose, to show how close the output gets to the token cap and
-// the 64-character limit.
+// Long string guidance on purpose, to probe the token cap and the 64-character limit.
 const stressRequest = {
   description:
     'Product catalogue of an online outdoor equipment store: tents, backpacks, footwear, ' +
     'clothing and climbing gear from a range of brands, with realistic prices and stock levels.',
-  count: 50,
+  count: 25,
   fields: [
     { name: 'sku', type: 'string', nullable: false, guidance: 'Three uppercase letters, a dash, six digits' },
     { name: 'productName', type: 'string', nullable: false, guidance: 'Brand and descriptive name, 40 to 60 characters' },
@@ -34,7 +33,7 @@ const customersRequest = {
   description:
     'Customers of a European online homeware shop, with a mix of new and long-standing accounts, ' +
     'varied countries and realistic contact details.',
-  count: 50,
+  count: 25,
   fields: [
     { name: 'customerId', type: 'string', nullable: false, guidance: 'CUS- followed by six digits' },
     { name: 'fullName', type: 'string', nullable: false },
