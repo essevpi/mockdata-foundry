@@ -1,4 +1,4 @@
-import type { PrimitiveValue } from '../../lib/generation';
+import type { GenerationError, GenerationState, PrimitiveValue } from '../../lib/generation';
 
 export type CellDisplay = {
   kind: 'boolean' | 'empty' | 'null' | 'number' | 'text';
@@ -52,20 +52,41 @@ export function getNextResultsView(current: ResultsView, key: string): ResultsVi
   }
 }
 
-// Approximate wait for a rate-limited request: Groq's per-minute limits give seconds, the
-// firewall window minutes, and Groq's daily request cap hours.
-export function formatRetryDelay(seconds: number): string {
-  if (seconds < 60) {
-    return 'under a minute';
+// No HTTP reply reached the browser: either generate()'s own timeout fired (the function is
+// still slower than its 60 s limit allows) or the network failed.
+export function getNoResponseMessage(error: unknown): string {
+  return error instanceof DOMException && error.name === 'TimeoutError'
+    ? 'Generation took too long and was stopped. Please try again, or ask for fewer records.'
+    : 'The server could not be reached. Check your connection and try again.';
+}
+
+// The error state records when the error arrived, so a retry time is fixed from that moment.
+export function createErrorState(
+  error: GenerationError['error'],
+  receivedAt = Date.now(),
+): Extract<GenerationState, { status: 'error' }> {
+  return { status: 'error', error, receivedAt };
+}
+
+type ClockOptions = { locale?: string; timeZone?: string };
+
+// When a rate-limited user can generate again. Short waits (Groq's per-minute budget) read as
+// "under a minute"; longer ones as a clock time rounded up to the minute, so it is never early.
+export function describeRetry(
+  retryAfterSeconds: number,
+  receivedAt: number,
+  { locale, timeZone }: ClockOptions = {},
+): string {
+  if (retryAfterSeconds < 60) {
+    return 'You can try again in under a minute.';
   }
 
-  const minutes = Math.ceil(seconds / 60);
+  const retryAt = Math.ceil((receivedAt + retryAfterSeconds * 1_000) / 60_000) * 60_000;
+  const time = new Intl.DateTimeFormat(locale, {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone,
+  }).format(retryAt);
 
-  if (minutes < 90) {
-    return minutes === 1 ? 'about a minute' : `about ${minutes} minutes`;
-  }
-
-  const hours = Math.round(minutes / 60);
-
-  return `about ${hours} hours`;
+  return `You can generate again by ${time}.`;
 }

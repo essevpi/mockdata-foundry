@@ -65,16 +65,22 @@ describe('createMockSuccess', () => {
 });
 
 describe('getMockResponse', () => {
-  it.each(MOCK_OUTCOMES.filter((outcome) => outcome !== 'success'))(
+  it.each(MOCK_OUTCOMES.filter((outcome) => outcome !== 'success' && outcome !== 'FIREWALL_LIMIT'))(
     'returns the %s error envelope',
     (outcome) => {
       expect(getMockResponse(request, outcome)).toMatchObject({ error: { code: outcome } });
     },
   );
 
+  it('replays the firewall reply as a demo-limit RATE_LIMITED error with the window as the wait', () => {
+    expect(getMockResponse(request, 'FIREWALL_LIMIT')).toMatchObject({
+      error: { code: 'RATE_LIMITED', message: expect.stringContaining('5 generations'), retryAfterSeconds: 600 },
+    });
+  });
+
   it('includes a retry delay for rate limiting only', () => {
     expect(getMockResponse(request, 'RATE_LIMITED')).toMatchObject({
-      error: { retryAfterSeconds: 600 },
+      error: { retryAfterSeconds: 30 },
     });
     expect(getMockResponse(request, 'UPSTREAM_ERROR')).not.toHaveProperty('error.retryAfterSeconds');
   });

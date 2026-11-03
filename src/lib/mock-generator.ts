@@ -1,3 +1,4 @@
+import { readGenerateResponse } from './generate-response';
 import {
   GENERATION_ERROR_MESSAGES,
   type FieldDefinition,
@@ -14,6 +15,7 @@ export const MOCK_OUTCOMES = [
   'INVALID_REQUEST',
   'CONFIGURATION_ERROR',
   'RATE_LIMITED',
+  'FIREWALL_LIMIT',
   'UPSTREAM_ERROR',
   'INVALID_GENERATION',
 ] as const;
@@ -23,7 +25,8 @@ export type MockOutcome = (typeof MOCK_OUTCOMES)[number];
 function createMockError(code: GenerationErrorCode): GenerationError['error'] {
   const error = { code, message: GENERATION_ERROR_MESSAGES[code] };
 
-  return code === 'RATE_LIMITED' ? { ...error, retryAfterSeconds: 600 } : error;
+  // Like Groq's per-minute token limit; FIREWALL_LIMIT covers the longer firewall wait.
+  return code === 'RATE_LIMITED' ? { ...error, retryAfterSeconds: 30 } : error;
 }
 
 // Contains a quote, a comma, and a line break so export escaping can be checked by eye.
@@ -66,9 +69,21 @@ export function createMockSuccess(request: GenerateRequest): GenerateSuccess {
   };
 }
 
+// The Vercel Firewall's rate-limit reply as measured in November 2026, read through the same
+// path as a live response.
+const FIREWALL_REPLY = {
+  status: 429,
+  headers: new Headers({ 'Content-Type': 'application/json' }),
+  bodyText: '{"error":{"code":"429","message":"Too Many Requests","id":"mock"}}',
+};
+
 export function getMockResponse(request: GenerateRequest, outcome: MockOutcome): GenerateResponse {
   if (outcome === 'success') {
     return createMockSuccess(request);
+  }
+
+  if (outcome === 'FIREWALL_LIMIT') {
+    return readGenerateResponse(FIREWALL_REPLY, request);
   }
 
   return { error: createMockError(outcome) };

@@ -37,6 +37,13 @@ export type GenerateSuccess = {
   records: Array<Record<string, PrimitiveValue>>;
 };
 
+// Mirrors the Vercel Firewall rule on POST /api/generate (see PLAN.md); change both together.
+export const DEMO_RATE_LIMIT = { requests: 5, windowSeconds: 600 } as const;
+
+export const DEMO_RATE_LIMIT_TEXT = `This demo allows ${DEMO_RATE_LIMIT.requests} generations every ${
+  DEMO_RATE_LIMIT.windowSeconds / 60
+} minutes`;
+
 export type GenerationErrorCode =
   | 'INVALID_REQUEST'
   | 'CONFIGURATION_ERROR'
@@ -48,7 +55,7 @@ export type GenerationErrorCode =
 export const GENERATION_ERROR_MESSAGES: Record<GenerationErrorCode, string> = {
   INVALID_REQUEST: 'The request was not accepted. Check your description and fields, then try again.',
   CONFIGURATION_ERROR: 'Data generation is not available right now. Please try again later.',
-  RATE_LIMITED: 'Too many requests. Please wait before generating again.',
+  RATE_LIMITED: "The demo's shared generation budget is used up for the moment.",
   UPSTREAM_ERROR: 'The data provider could not complete the request. Please try again.',
   INVALID_GENERATION:
     'The model returned too few usable records, even after a retry. Please try again, or ask for fewer records or fields.',
@@ -76,7 +83,8 @@ export type GenerationState =
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'success'; result: GenerateSuccess; columns: string[] }
-  | { status: 'error'; error: GenerationError['error'] };
+  // receivedAt (epoch ms) turns retryAfterSeconds into a clock time that stays fixed on re-render.
+  | { status: 'error'; error: GenerationError['error']; receivedAt: number };
 
 export type GenerationStatus = GenerationState['status'];
 

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatCellValue,
-  formatRetryDelay,
+  describeRetry,
+  getNoResponseMessage,
   getNextResultsView,
   getResultsTabId,
 } from './result-utils';
@@ -48,17 +49,29 @@ describe('getResultsTabId', () => {
   });
 });
 
-describe('formatRetryDelay', () => {
-  it.each([
-    [7, 'under a minute'],
-    [59, 'under a minute'],
-    [60, 'about a minute'],
-    [61, 'about 2 minutes'],
-    [600, 'about 10 minutes'],
-    [89 * 60, 'about 89 minutes'],
-    [90 * 60, 'about 2 hours'],
-    [5 * 3600, 'about 5 hours'],
-  ])('formats %i seconds as %s', (seconds, expected) => {
-    expect(formatRetryDelay(seconds)).toBe(expected);
+describe('describeRetry', () => {
+  const receivedAt = Date.UTC(2026, 10, 3, 11, 29, 20);
+  const clock = { locale: 'en-GB', timeZone: 'UTC' };
+
+  it('reads short waits as under a minute', () => {
+    expect(describeRetry(7, receivedAt, clock)).toBe('You can try again in under a minute.');
+  });
+
+  it('gives a clock time rounded up to the minute', () => {
+    expect(describeRetry(600, receivedAt, clock)).toBe('You can generate again by 11:40.');
+    expect(describeRetry(60, Date.UTC(2026, 10, 3, 11, 29), clock)).toBe(
+      'You can generate again by 11:30.',
+    );
+  });
+
+  it('handles waits of several hours, such as a daily cap', () => {
+    expect(describeRetry(5 * 3_600, receivedAt, clock)).toBe('You can generate again by 16:30.');
+  });
+});
+
+describe('getNoResponseMessage', () => {
+  it('tells a timeout apart from a network failure', () => {
+    expect(getNoResponseMessage(new DOMException('timed out', 'TimeoutError'))).toMatch(/too long/);
+    expect(getNoResponseMessage(new TypeError('Failed to fetch'))).toMatch(/could not be reached/);
   });
 });

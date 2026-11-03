@@ -18,7 +18,7 @@ React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-re
 - `src/features/generator/field-row-layout.ts`: grid template shared by the field list header and its rows
 - `src/features/generator/result-utils.ts`: cell display formatting, results view helpers and retry-delay wording
 - `src/features/generator/json-tokens.ts`: splits JSON export text into typed tokens per line (for the Editor view)
-- `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation
+- `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation, and `DEMO_RATE_LIMIT`, which mirrors the Vercel Firewall rule (change both together)
 - `src/lib/generate.ts`: the single `generate(request)` entry point. UI code calls only `generate()`. It posts to `/api/generate` and checks the reply with `generate-response.ts`; in development builds it can use `mock-generator.ts` instead (dynamically imported inside a `DEV` branch, so production never bundles it).
 - `src/lib/record-check.ts`: the per-record check (field set, types, nulls, string cap) shared by the server's line parser and the browser's response check
 - `src/lib/storage.ts`: `localStorage` access that tolerates blocked storage

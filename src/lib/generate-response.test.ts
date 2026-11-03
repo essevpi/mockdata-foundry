@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { GENERATION_ERROR_MESSAGES, type GenerateRequest } from './generation';
+import {
+  DEMO_RATE_LIMIT_TEXT,
+  GENERATION_ERROR_MESSAGES,
+  type GenerateRequest,
+} from './generation';
 import { readGenerateResponse } from './generate-response';
 
 const request: GenerateRequest = {
@@ -73,17 +77,27 @@ describe('readGenerateResponse', () => {
     expect(read(429, body)).toEqual(error('RATE_LIMITED'));
   });
 
-  it('reads Retry-After from a 429 that is not our envelope, such as the firewall reply', () => {
-    expect(read(429, '<html>Too Many Requests</html>', { 'Retry-After': '600' })).toEqual(
-      error('RATE_LIMITED', 600),
+  it('explains the demo limit for a 429 that is not our envelope, with the window as the wait', () => {
+    const firewallLimit = (retryAfterSeconds: number) => ({
+      error: {
+        code: 'RATE_LIMITED',
+        message: `${DEMO_RATE_LIMIT_TEXT} from one network.`,
+        retryAfterSeconds,
+      },
+    });
+
+    expect(read(429, '')).toEqual(firewallLimit(600));
+    expect(read(429, '<html>Too Many Requests</html>', { 'Retry-After': '120' })).toEqual(
+      firewallLimit(120),
     );
-    expect(read(429, '')).toEqual(error('RATE_LIMITED'));
   });
 
   it("maps the Vercel Firewall's rate-limit reply (measured November 2026) to RATE_LIMITED", () => {
     const body = { error: { code: '429', message: 'Too Many Requests', id: 'fra1::abc' } };
 
-    expect(read(429, body)).toEqual(error('RATE_LIMITED'));
+    expect(read(429, body)).toMatchObject({
+      error: { code: 'RATE_LIMITED', message: `${DEMO_RATE_LIMIT_TEXT} from one network.` },
+    });
   });
 
   it('maps an unknown error code by status', () => {

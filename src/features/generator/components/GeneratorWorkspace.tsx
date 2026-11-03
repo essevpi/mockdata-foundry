@@ -25,6 +25,7 @@ import {
   type TouchedSection,
 } from '../field-utils';
 import { readStoredGeneratorSource, storeGeneratorSource } from '../generator-source';
+import { createErrorState, getNoResponseMessage } from '../result-utils';
 import type { Preset } from '../presets';
 import { CommandBar } from './CommandBar';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
@@ -209,22 +210,17 @@ function GeneratorWorkspace() {
 
       setGeneration(
         'error' in response
-          ? { status: 'error', error: response.error }
+          ? createErrorState(response.error)
           : {
               status: 'success',
               result: response,
               columns: request.fields.map((field) => field.name),
             },
       );
-    } catch {
-      // Network failure or the client timeout: no HTTP response reached the browser.
-      setGeneration({
-        status: 'error',
-        error: {
-          code: 'UPSTREAM_ERROR',
-          message: 'The server could not be reached. Check your connection and try again.',
-        },
-      });
+    } catch (error) {
+      setGeneration(
+        createErrorState({ code: 'UPSTREAM_ERROR', message: getNoResponseMessage(error) }),
+      );
     }
   }
 

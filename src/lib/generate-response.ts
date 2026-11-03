@@ -1,4 +1,6 @@
 import {
+  DEMO_RATE_LIMIT,
+  DEMO_RATE_LIMIT_TEXT,
   GENERATION_ERROR_MESSAGES,
   isRecord,
   parseRetryAfter,
@@ -80,7 +82,7 @@ function readErrorEnvelope(body: unknown): GenerationError | undefined {
 // like the provider output behind it: a success must hold exactly the requested number of
 // records, each passing the same checkRecord the server uses. Responses that are not our
 // envelope (platform error pages, the firewall's rate-limit reply, a missing endpoint) map by
-// status, so the UI always gets a known error code.
+// status, so the UI always gets a known error code. Messages come from the client's own copy.
 export function readGenerateResponse(
   { status, headers, bodyText }: RawGenerateResponse,
   request: GenerateRequest,
@@ -99,8 +101,17 @@ export function readGenerateResponse(
     return envelope;
   }
 
+  // The Vercel Firewall's reply: no Retry-After, and its window starts at the first request,
+  // so a full window from now is a wait that is never too short.
   if (status === 429) {
-    return toError('RATE_LIMITED', parseRetryAfter(headers.get('retry-after')));
+    return {
+      error: {
+        code: 'RATE_LIMITED',
+        message: `${DEMO_RATE_LIMIT_TEXT} from one network.`,
+        retryAfterSeconds:
+          parseRetryAfter(headers.get('retry-after')) ?? DEMO_RATE_LIMIT.windowSeconds,
+      },
+    };
   }
 
   if (status === 404) {

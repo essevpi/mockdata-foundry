@@ -1,8 +1,8 @@
 import { TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import type { GenerationState } from '../../../lib/generation';
+import { DEMO_RATE_LIMIT_TEXT, type GenerationState } from '../../../lib/generation';
 import {
-  formatRetryDelay,
+  describeRetry,
   getResultsTabId,
   RESULTS_VIEW_PANEL_ID,
   type ResultsView,
@@ -60,6 +60,7 @@ function ResultsPanel({ state }: ResultsPanelProps) {
           <p className="mt-2 text-sm leading-6 text-content-muted">
             Generated records will appear here.
           </p>
+          <p className="mt-1 text-xs leading-5 text-content-muted">{DEMO_RATE_LIMIT_TEXT}.</p>
         </div>
       )}
 
@@ -93,12 +94,12 @@ function ResultsPanel({ state }: ResultsPanelProps) {
         >
           <h3 className="flex items-center gap-2 text-sm font-semibold text-danger">
             <TriangleAlert aria-hidden="true" className="size-4" />
-            Generation failed
+            {state.error.code === 'RATE_LIMITED' ? 'Generation limit reached' : 'Generation failed'}
           </h3>
           <p className="mt-2 text-sm leading-6 text-content">{state.error.message}</p>
           {state.error.retryAfterSeconds !== undefined && (
             <p className="mt-1 text-sm text-content-muted">
-              You can try again in {formatRetryDelay(state.error.retryAfterSeconds)}.
+              {describeRetry(state.error.retryAfterSeconds, state.receivedAt)}
             </p>
           )}
           <p className="mt-3 text-xs text-content-muted">Your description and fields were kept.</p>
