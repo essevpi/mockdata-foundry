@@ -51,7 +51,7 @@ export const GENERATION_ERROR_MESSAGES: Record<GenerationErrorCode, string> = {
   RATE_LIMITED: 'Too many requests. Please wait before generating again.',
   UPSTREAM_ERROR: 'The data provider could not complete the request. Please try again.',
   INVALID_GENERATION:
-    'The generated data did not match your fields, so it was discarded. Please try again.',
+    'The model returned too few usable records, even after a retry. Please try again, or ask for fewer records or fields.',
 };
 
 export type GenerationError = {
@@ -63,6 +63,14 @@ export type GenerationError = {
 };
 
 export type GenerateResponse = GenerateSuccess | GenerationError;
+
+// Reads a Retry-After header given in seconds (Groq's form) as whole seconds; HTTP dates and
+// missing or non-positive values give undefined.
+export function parseRetryAfter(value: string | null): number | undefined {
+  const seconds = Number(value);
+
+  return value !== null && Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : undefined;
+}
 
 export type GenerationState =
   | { status: 'idle' }

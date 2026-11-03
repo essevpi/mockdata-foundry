@@ -79,11 +79,11 @@ For example, a nullable `nickname` of `null` exports as an empty field, while `"
 - Send the rules as a `developer` message (where gpt-oss's harmony format expects instructions), ending with the record schema in a `# Response Formats` section, and the request as JSON in the user message. Ask for JSON Lines so a slip costs one record, not the reply. [OpenAI harmony format](https://developers.openai.com/cookbook/articles/openai-harmony)
 - Set `reasoning_effort: "low"` and `include_reasoning: false`. Groq's API reference states the output cap includes reasoning tokens (about 15–80 per request at `low`), so the cap formula allows for them.
 - Generation makes one request for all records, then at most one top-up for the records still missing (asking it not to repeat the first string field's values), only when Groq's `x-ratelimit-*` headers show enough of the per-minute token budget within 15 s and the request still fits a 55 s time budget. Otherwise it fails with `INVALID_GENERATION`.
-- Account limits measured from headers (free tier): 8,000 tokens per minute and 1,000 requests per day; Groq does not report the daily token budget in headers.
+- Account limits measured from headers (free tier): 8,000 tokens per minute and 1,000 requests per day. Groq's docs add 30 requests per minute and 200,000 tokens per day for `openai/gpt-oss-120b`; the daily token budget is not reported in headers and allows about 80 maximum-size generations a day across the organization. On the free tier, abuse costs availability, not money.
 - Add a `tsconfig.api.json` project (referenced from `tsconfig.json`) so `npm run build` type-checks `api/`, which imports the shared contract and validation from `src/lib/`.
 - Preserve `npm run dev` as the normal Vite-only frontend server. It does not serve `api/generate.ts`. Until the UI is connected to the API, and afterwards behind a dev-only flag, the UI generates data through a local mock generator behind the same `generate(request)` function, so UI work needs no Vercel or Groq access.
 - Add the Vercel CLI as a development dependency and a separate `dev:vercel` script running `vercel dev`. Run this command from the project root when testing the integrated frontend and `/api/generate` together; it starts the configured Vite development command and emulates Vercel Functions. Link the project and obtain local environment variables with Vercel’s supported workflow before live calls. [Vercel local development](https://vercel.com/docs/cli/dev), [Vite on Vercel](https://vercel.com/docs/frameworks/frontend/vite)
-- Before public deployment, configure a Vercel Firewall rate-limit rule for `POST /api/generate`: 2 requests per IP per 10-minute fixed window, returning 429. Test it first in logging mode, then enforce it. This needs no application dependency or persistent store. [Vercel WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting)
+- Before public deployment, configure a Vercel Firewall rate-limit rule for `POST /api/generate`: 5 requests per IP per 10-minute fixed window, returning 429. Test it first in logging mode, then enforce it. This needs no application dependency or persistent store. Hobby allows one rate-limit rule per project with a window of 10 s to 10 minutes, and counters are kept per region. [Vercel WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting)
 - Create and use a Groq project-specific key. Set conservative project limits at or below the organization’s available limits, initially targeting 100 requests/day. Groq projects can cap requests per model, but token limits apply only at the organization level and cannot be set per project. The exact settings must be confirmed in the account because published limits are not account-specific.
 - The record and request limits, Vercel per-IP rule, and Groq project quota form the MVP’s bounded-usage control. An unauthenticated public endpoint cannot guarantee a global per-user usage budget against distributed abuse; do not publicly launch if the account cannot enforce an acceptable project-level quota.
 
@@ -164,19 +164,23 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Acceptance: malformed, oversized, and out-of-range requests fail before Groq; invalid output is never returned; no credential reaches the browser.
    - Checks: lint, build, tests, local endpoint requests through `vercel dev`, and smoke tests recording token usage and validity rates.
 
-4. **End-to-end integration and deployment readiness** — ⏳ not started
-   - Create a second Groq key for production and store it as a Vercel Secret (`vercel env add GROQ_API_KEY production --sensitive`, run outside the assistant session), plus Preview if previews should generate live data.
-   - Switch `generate()` to call `/api/generate` (keeping the mock behind a dev-only flag); configure the Vercel local-development command, environment workflow, Vercel Firewall rule, Groq project key and quota, and concise README instructions.
+4. **End-to-end integration and deployment readiness** — ⏳ in progress
+   - Decisions (2026-11-03, after checking the Groq and Vercel docs): a dev-only Mock / Live API switch in the DevTools widget instead of an env flag; a firewall limit of 5 requests per IP per 10 minutes (2 would block a visitor after two presets); deployments through the CLI only (`vercel deploy`, `vercel deploy --prod`), with GitHub left unconnected until public launch; a separate Groq key per environment (development, preview, production).
+   1. ✅ Connect the UI to `/api/generate`.
+      - `generate()` posts to `/api/generate` (70 s client timeout, above the function's 60 s `maxDuration`) and reads the reply with `readGenerateResponse` (`src/lib/generate-response.ts`): a success must hold exactly the requested number of records, each passing `checkRecord` (`src/lib/record-check.ts`, now shared with the server's line parser). Error envelopes keep their code, but the message comes from the client's own `GENERATION_ERROR_MESSAGES`. Replies that are not the envelope map by status: 429 → `RATE_LIMITED` (seconds from `Retry-After`), 404 → `CONFIGURATION_ERROR`, other 4xx → `INVALID_REQUEST`, anything else (including a malformed 200) → `UPSTREAM_ERROR`. No HTTP reply at all (network failure, timeout) shows a "server could not be reached" error.
+      - Development builds: DevTools has a Generator choice (Mock, the default, or Live API), remembered in `localStorage`; the mock outcome picker shows only for Mock. Production builds always call the API; the mock is loaded with a dynamic import inside a `DEV` branch, so it is not bundled (checked in `dist/`).
+      - Copy: `INVALID_GENERATION` now says a retry was already tried and suggests fewer records or fields; retry delays read "under a minute", "about N minutes" or "about N hours" (Groq's daily cap).
+      - Verified through `vercel dev`: 10 and 25 records (the 25-record request used a 2-record top-up); table, Editor, JSON and CSV downloads matched the response; 2/2 smoke runs succeeded (~712 prompt + ~1,800 output tokens, 4–5 s). Under `npm run dev`, Live API gets Vite's 404 and shows the "not available" state.
+   2. ⏳ Deployment readiness.
+      - Groq (in the console, by the owner): a Production and a Preview key in the project "mockdata-foundry"; per-model project limits for `openai/gpt-oss-120b` (target 100 requests/day if the console offers a daily cap; the docs only show per-minute examples).
+      - Vercel (outside the assistant session): `vercel env add GROQ_API_KEY production --sensitive` and the same for `preview`. Vercel now calls these Secret variables (`--type secret`); they are write-only, so `.env` stays the local key store.
+      - `vercel deploy` (preview, behind Vercel Authentication) and a live check in the browser.
+      - Firewall rule for `POST /api/generate`, 5 per IP per 600 s fixed window: first with the `log` action, measured with invalid requests (rejected with 400 before any Groq call, so no tokens are spent), then enforced; record the real 429 body and headers (not documented) and adjust `readGenerateResponse` if needed.
+      - `vercel deploy --prod` only after an explicit go-ahead; README with local setup, checks and deployment steps.
    - Acceptance: a live request through `vercel dev` returns 1–25 validated records using `openai/gpt-oss-120b`; preview and both exports match the response; rate-limit and provider errors produce safe, actionable UI states.
    - Checks: lint, build, tests, smoke test, local Vercel-function test, and Vercel preview verification.
-   - Current state (end of milestone 3): the folder is linked to the Vercel project `mockdata-foundry` (`.vercel/`, git-ignored); `.env` holds the development `GROQ_API_KEY` (Groq project "mockdata-foundry"); no production key exists yet; the GitHub repository is not connected to Vercel, so pushes do not deploy; nothing has been deployed.
-   - Open questions to settle at the start of the milestone:
-     - How the browser checks the `/api/generate` response before showing it (a small hand-written check of the `GenerateResponse` shape; no schema library).
-     - Name and behaviour of the dev-only flag that keeps the mock generator, and whether `DevTools.tsx` keeps forcing mock outcomes.
-     - How the UI shows `RATE_LIMITED` with `retryAfterSeconds` (from Groq or from the firewall rule), and the copy for `INVALID_GENERATION` now that a top-up has already been tried.
-     - Whether to connect the GitHub repository for automatic preview deployments.
-     - Whether the 2-requests-per-10-minutes firewall rule suits a demo, given that one generation uses ~2.5K of the 8,000 tokens per minute.
-     - The 33 `npm audit` findings come from the Vercel CLI's own dependencies (dev-only, never shipped); they were accepted in milestone 3. Re-check when upgrading the CLI.
+   - State at the start of the milestone: the folder is linked to the Vercel project `mockdata-foundry` (`.vercel/`, git-ignored); `.env` holds the development `GROQ_API_KEY` (Groq project "mockdata-foundry"); no production key exists yet; the GitHub repository is not connected to Vercel, so pushes do not deploy; nothing has been deployed.
+   - The 33 `npm audit` findings come from the Vercel CLI's own dependencies (dev-only, never shipped); they were accepted in milestone 3. Re-check when upgrading the CLI (64.1.0 installed, 65.10.0 available in November 2026).
 
 ## Post-MVP ideas
 
@@ -189,7 +193,7 @@ Not part of the MVP; recorded so they are not lost.
 ## Remaining decisions and prerequisites
 
 - Confirm the target Groq account can apply the proposed 100-request/day project cap. The free tier's 8,000 tokens per minute fits about three 25-record generations per minute.
-- Confirm Vercel Firewall rate limiting is available and acceptable for the target Vercel plan before exposing the endpoint publicly.
-- Approve the Vercel CLI (to run and test the root-level Vercel Function locally) as the only new development dependency still to be added; Vitest is already installed. `lucide-react` and `motion` are installed.
-- The record limit was lowered to 25 after the milestone 3 smoke tests (the firewall-rule question is listed under milestone 4).
+- Vercel Firewall rate limiting is available on every plan (Hobby: one rate-limit rule per project); confirm the project's plan before exposing the endpoint publicly.
+- The Vercel CLI (development) is installed; no further dependencies are planned.
+- The record limit was lowered to 25 after the milestone 3 smoke tests.
 - If Groq fixes constrained decoding for gpt-oss, or the model changes, re-measure strict `json_schema` against JSON Lines before switching.

@@ -1,19 +1,12 @@
 import { Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
+import { getLocalStorage } from '../../lib/storage';
 import { parseTheme, readStoredTheme, storeTheme, type Theme } from './theme-utils';
-
-function getStorage(): Storage | undefined {
-  try {
-    return window.localStorage;
-  } catch {
-    return undefined;
-  }
-}
 
 function ThemeToggle() {
   // The inline script in index.html has already applied the stored theme before first paint.
   const [theme, setTheme] = useState<Theme>(() =>
-    parseTheme(document.documentElement.dataset.theme ?? readStoredTheme(getStorage())),
+    parseTheme(document.documentElement.dataset.theme ?? readStoredTheme(getLocalStorage())),
   );
   const isLight = theme === 'light';
 
@@ -21,7 +14,7 @@ function ThemeToggle() {
     const nextTheme: Theme = isLight ? 'dark' : 'light';
 
     document.documentElement.dataset.theme = nextTheme;
-    storeTheme(getStorage(), nextTheme);
+    storeTheme(getLocalStorage(), nextTheme);
     setTheme(nextTheme);
   }
 

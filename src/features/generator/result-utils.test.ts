@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatCellValue, getNextResultsView, getResultsTabId } from './result-utils';
+import {
+  formatCellValue,
+  formatRetryDelay,
+  getNextResultsView,
+  getResultsTabId,
+} from './result-utils';
 
 describe('formatCellValue', () => {
   it('distinguishes null from an empty string', () => {
@@ -40,5 +45,20 @@ describe('getNextResultsView', () => {
 describe('getResultsTabId', () => {
   it('gives each view a distinct id', () => {
     expect(getResultsTabId('table')).not.toBe(getResultsTabId('editor'));
+  });
+});
+
+describe('formatRetryDelay', () => {
+  it.each([
+    [7, 'under a minute'],
+    [59, 'under a minute'],
+    [60, 'about a minute'],
+    [61, 'about 2 minutes'],
+    [600, 'about 10 minutes'],
+    [89 * 60, 'about 89 minutes'],
+    [90 * 60, 'about 2 hours'],
+    [5 * 3600, 'about 5 hours'],
+  ])('formats %i seconds as %s', (seconds, expected) => {
+    expect(formatRetryDelay(seconds)).toBe(expected);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   REQUEST_LIMITS,
+  parseRetryAfter,
   validateGenerateRequest,
   type FieldDefinition,
   type GenerateRequest,
@@ -151,5 +152,18 @@ describe('validateGenerateRequest', () => {
     });
 
     expect(getIssueFields(request)).toEqual(['request']);
+  });
+});
+
+describe('parseRetryAfter', () => {
+  it.each([
+    ['7', 7],
+    ['2.4', 3],
+    [null, undefined],
+    ['', undefined],
+    ['0', undefined],
+    ['soon', undefined],
+  ])('parses %j as %j', (value, expected) => {
+    expect(parseRetryAfter(value)).toBe(expected);
   });
 });

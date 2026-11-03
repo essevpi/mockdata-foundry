@@ -1,7 +1,12 @@
 import { TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { GenerationState } from '../../../lib/generation';
-import { getResultsTabId, RESULTS_VIEW_PANEL_ID, type ResultsView } from '../result-utils';
+import {
+  formatRetryDelay,
+  getResultsTabId,
+  RESULTS_VIEW_PANEL_ID,
+  type ResultsView,
+} from '../result-utils';
 import { ExportFooter } from './ExportFooter';
 import { JsonEditorView } from './JsonEditorView';
 import { ResultsTable } from './ResultsTable';
@@ -12,12 +17,6 @@ type ResultsPanelProps = {
 };
 
 const SKELETON_ROW_WIDTHS = ['w-full', 'w-5/6', 'w-full', 'w-2/3', 'w-11/12', 'w-3/4'];
-
-function formatRetryDelay(seconds: number) {
-  const minutes = Math.ceil(seconds / 60);
-
-  return minutes <= 1 ? 'about a minute' : `about ${minutes} minutes`;
-}
 
 function ResultsPanel({ state }: ResultsPanelProps) {
   const sectionRef = useRef<HTMLElement>(null);

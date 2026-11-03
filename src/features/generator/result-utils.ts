@@ -51,3 +51,21 @@ export function getNextResultsView(current: ResultsView, key: string): ResultsVi
       return undefined;
   }
 }
+
+// Approximate wait for a rate-limited request: Groq's per-minute limits give seconds, the
+// firewall window minutes, and Groq's daily request cap hours.
+export function formatRetryDelay(seconds: number): string {
+  if (seconds < 60) {
+    return 'under a minute';
+  }
+
+  const minutes = Math.ceil(seconds / 60);
+
+  if (minutes < 90) {
+    return minutes === 1 ? 'about a minute' : `about ${minutes} minutes`;
+  }
+
+  const hours = Math.round(minutes / 60);
+
+  return `about ${hours} hours`;
+}

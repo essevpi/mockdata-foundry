@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { flushSync } from 'react-dom';
-import { generate } from '../../../lib/generate';
+import { generate, type GeneratorSource } from '../../../lib/generate';
 import {
   REQUEST_LIMITS,
   validateGenerateRequest,
@@ -9,6 +9,7 @@ import {
   type ValidationIssue,
 } from '../../../lib/generation';
 import type { MockOutcome } from '../../../lib/mock-generator';
+import { getLocalStorage } from '../../../lib/storage';
 import {
   buildGenerateRequest,
   DEFAULT_RECORD_COUNT,
@@ -23,6 +24,7 @@ import {
   type FieldDraft,
   type TouchedSection,
 } from '../field-utils';
+import { readStoredGeneratorSource, storeGeneratorSource } from '../generator-source';
 import type { Preset } from '../presets';
 import { CommandBar } from './CommandBar';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
@@ -44,6 +46,10 @@ function GeneratorWorkspace() {
   const [fields, setFields] = useState<FieldDraft[]>([]);
   const [recordCount, setRecordCount] = useState(DEFAULT_RECORD_COUNT);
   const [generation, setGeneration] = useState<GenerationState>({ status: 'idle' });
+  // Development builds only (DevTools); production always uses the API.
+  const [source, setSource] = useState<GeneratorSource>(() =>
+    import.meta.env.DEV ? readStoredGeneratorSource(getLocalStorage()) : 'api',
+  );
   const [mockOutcome, setMockOutcome] = useState<MockOutcome>('success');
   const [touched, setTouched] = useState<ReadonlySet<TouchedSection>>(new Set());
   // What Clear form removed, kept until the form gets new content so Undo can restore it.
@@ -87,6 +93,11 @@ function GeneratorWorkspace() {
   function dropClearedForm() {
     setClearedForm(null);
     setResetAnnouncement('');
+  }
+
+  function changeSource(nextSource: GeneratorSource) {
+    storeGeneratorSource(getLocalStorage(), nextSource);
+    setSource(nextSource);
   }
 
   function changeDescription(nextDescription: string) {
@@ -194,7 +205,7 @@ function GeneratorWorkspace() {
     setGeneration({ status: 'loading' });
 
     try {
-      const response = await generate(request, { mockOutcome });
+      const response = await generate(request, { source, mockOutcome });
 
       setGeneration(
         'error' in response
@@ -206,11 +217,12 @@ function GeneratorWorkspace() {
             },
       );
     } catch {
+      // Network failure or the client timeout: no HTTP response reached the browser.
       setGeneration({
         status: 'error',
         error: {
           code: 'UPSTREAM_ERROR',
-          message: 'Something went wrong while generating data. Please try again.',
+          message: 'The server could not be reached. Check your connection and try again.',
         },
       });
     }
@@ -278,7 +290,14 @@ function GeneratorWorkspace() {
           onAddField={addField}
         />
       </form>
-      {import.meta.env.DEV && <DevTools outcome={mockOutcome} onOutcomeChange={setMockOutcome} />}
+      {import.meta.env.DEV && (
+        <DevTools
+          outcome={mockOutcome}
+          source={source}
+          onOutcomeChange={setMockOutcome}
+          onSourceChange={changeSource}
+        />
+      )}
       <PourLine active={isLoading} axis="y" className="inset-y-0 left-1/2 -ml-0.5 hidden w-0.5 lg:block" />
       <div className="flex min-w-0 flex-col border-t border-border-strong bg-surface p-4 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:border-t-0 lg:bg-transparent">
         <ResultsPanel state={generation} />

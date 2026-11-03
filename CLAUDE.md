@@ -8,18 +8,20 @@ When a change affects the commands, project layout, conventions or dependency ru
 
 ## Stack
 
-React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. The Vercel Function calls Groq (milestone 3), but the UI still uses the mock until milestone 4 (progress in `PLAN.md`).
+React 19, TypeScript 6, Vite 8, Tailwind CSS 4, Vitest. UI libraries: `lucide-react` (icons) and `motion` (animations, imported from `motion/react`). Groq is the LLM provider (application model `openai/gpt-oss-120b`, set server-side); Vercel is the intended hosting platform. The UI calls the Vercel Function, which calls Groq; development builds can switch to a local mock (progress in `PLAN.md`).
 
 ## Project Layout
 
-- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form, generation state (including the Clear form undo snapshot) and the two-pane layout; `DatasetDetailsPanel.tsx` holds the description and record count, with slots for `ExamplePresets.tsx` (blank-form presets under the description) and `FormResetButton.tsx` (Clear form / Undo clear beside the heading); `CommandBar.tsx` is the always-visible action bar (Add field, Generate data); `ProblemTray.tsx` slides field problems up from behind it; `SelectField.tsx` wraps a native `<select>` (themed closed state, styled animated list where `appearance: base-select` is supported; styles in `src/index.css`); `PourLine.tsx` is the gold loading line along the pane seam; `ResultsPanel.tsx` renders the idle/loading/error/success states and owns the Table/Editor view choice, using `ResultsViewToggle.tsx`, `ResultsTable.tsx` or `JsonEditorView.tsx` (JSON from `toJson`), `ExportFooter.tsx` (download buttons with their null/CSV/formula notes) on success; `DevTools.tsx` is a dev-only corner widget (rendered only when `import.meta.env.DEV`) whose popover holds `MockOutcomeControl.tsx`, the picker for forcing mock outcomes.
+- `src/features/generator/components/`: generator UI. `GeneratorWorkspace.tsx` owns the form, generation state (including the Clear form undo snapshot) and the two-pane layout; `DatasetDetailsPanel.tsx` holds the description and record count, with slots for `ExamplePresets.tsx` (blank-form presets under the description) and `FormResetButton.tsx` (Clear form / Undo clear beside the heading); `CommandBar.tsx` is the always-visible action bar (Add field, Generate data); `ProblemTray.tsx` slides field problems up from behind it; `SelectField.tsx` wraps a native `<select>` (themed closed state, styled animated list where `appearance: base-select` is supported; styles in `src/index.css`); `PourLine.tsx` is the gold loading line along the pane seam; `ResultsPanel.tsx` renders the idle/loading/error/success states and owns the Table/Editor view choice, using `ResultsViewToggle.tsx`, `ResultsTable.tsx` or `JsonEditorView.tsx` (JSON from `toJson`), `ExportFooter.tsx` (download buttons with their null/CSV/formula notes) on success; `DevTools.tsx` is a dev-only corner widget (rendered only when `import.meta.env.DEV`) whose popover holds `GeneratorSourceControl.tsx` (Mock or Live API, remembered via `generator-source.ts`) and, for Mock, `MockOutcomeControl.tsx`, the picker for forcing mock outcomes.
 - `src/features/generator/field-utils.ts`: field drafts with stable ids, request building, issue visibility, record-count stepping, blank-form check, generate shortcut and counter tone
 - `src/features/generator/presets.ts`: the example presets (each must pass request validation; see its test)
 - `src/features/generator/field-row-layout.ts`: grid template shared by the field list header and its rows
-- `src/features/generator/result-utils.ts`: cell display formatting and results view helpers
+- `src/features/generator/result-utils.ts`: cell display formatting, results view helpers and retry-delay wording
 - `src/features/generator/json-tokens.ts`: splits JSON export text into typed tokens per line (for the Editor view)
 - `src/lib/generation.ts`: shared types, `REQUEST_LIMITS`, request validation
-- `src/lib/generate.ts`: the single `generate(request)` entry point, currently backed by `src/lib/mock-generator.ts`. UI code calls only `generate()`; swapping the mock for the real provider happens behind it.
+- `src/lib/generate.ts`: the single `generate(request)` entry point. UI code calls only `generate()`. It posts to `/api/generate` and checks the reply with `generate-response.ts`; in development builds it can use `mock-generator.ts` instead (dynamically imported inside a `DEV` branch, so production never bundles it).
+- `src/lib/record-check.ts`: the per-record check (field set, types, nulls, string cap) shared by the server's line parser and the browser's response check
+- `src/lib/storage.ts`: `localStorage` access that tolerates blocked storage
 - `src/lib/export.ts`, `src/lib/download.ts`: pure JSON/CSV serialization (CSV null convention in `PLAN.md`) and the browser download helper
 - `src/features/theme/`: `ThemeToggle.tsx` and pure `theme-utils.ts` (stored-theme parsing)
 - `src/index.css`: Tailwind import and theme tokens
@@ -37,8 +39,8 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 
 ## Commands
 
-- `npm run dev`: Vite dev server (mock generator only; does not serve `/api`)
-- `npm run dev:vercel`: `vercel dev` on the linked project, serving the app and `/api/generate`. Function variables come only from `.env` (git-ignored, holds the development `GROQ_API_KEY`), not `.env.local` (which holds the CLI's `VERCEL_OIDC_TOKEN`)
+- `npm run dev`: Vite dev server; does not serve `/api`, so use the mock (DevTools default)
+- `npm run dev:vercel`: `vercel dev` on the linked project, serving the app and `/api/generate`. Function variables come only from `.env` (git-ignored, holds the development `GROQ_API_KEY`), not `.env.local` (which holds the CLI's `VERCEL_OIDC_TOKEN`). Switch DevTools to Live API to call it
 - `npm run smoke`: sends maximum-size requests to `/api/generate` on a running `dev:vercel` (`SMOKE_REQUEST=stress|customers`, `SMOKE_RUNS`); results are in the server's `"event":"generate"` log lines. Uses real Groq tokens
 - `npm run build`: TypeScript checks and production bundle
 - `npm run lint`: ESLint

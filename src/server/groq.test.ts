@@ -7,7 +7,6 @@ import {
   callGroq,
   getMaxCompletionTokens,
   parseResetDuration,
-  parseRetryAfter,
 } from './groq.js';
 
 const request: GenerateRequest = {
@@ -58,19 +57,6 @@ describe('getMaxCompletionTokens', () => {
   it('scales with records and fields', () => {
     expect(getMaxCompletionTokens(1, 1)).toBe(236);
     expect(getMaxCompletionTokens(25, 8)).toBe(5_650);
-  });
-});
-
-describe('parseRetryAfter', () => {
-  it.each([
-    ['7', 7],
-    ['2.4', 3],
-    [null, undefined],
-    ['', undefined],
-    ['0', undefined],
-    ['soon', undefined],
-  ])('parses %j as %j', (value, expected) => {
-    expect(parseRetryAfter(value)).toBe(expected);
   });
 });
 

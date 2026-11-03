@@ -1,5 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { generate } from './generate';
+import { describe, expect, it } from 'vitest';
 import { validateGenerateRequest, type GenerateRequest } from './generation';
 import { MOCK_OUTCOMES, createMockSuccess, getMockResponse } from './mock-generator';
 
@@ -78,36 +77,5 @@ describe('getMockResponse', () => {
       error: { retryAfterSeconds: 600 },
     });
     expect(getMockResponse(request, 'UPSTREAM_ERROR')).not.toHaveProperty('error.retryAfterSeconds');
-  });
-});
-
-describe('generate', () => {
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('resolves after a delay with the chosen outcome', async () => {
-    vi.useFakeTimers();
-
-    const pending = generate(request, { mockOutcome: 'RATE_LIMITED' });
-    let settled = false;
-    void pending.then(() => {
-      settled = true;
-    });
-
-    await vi.advanceTimersByTimeAsync(100);
-    expect(settled).toBe(false);
-
-    await vi.advanceTimersByTimeAsync(2_000);
-    expect(await pending).toMatchObject({ error: { code: 'RATE_LIMITED' } });
-  });
-
-  it('defaults to success', async () => {
-    vi.useFakeTimers();
-
-    const pending = generate(request);
-    await vi.advanceTimersByTimeAsync(2_000);
-
-    expect(await pending).toEqual(createMockSuccess(request));
   });
 });

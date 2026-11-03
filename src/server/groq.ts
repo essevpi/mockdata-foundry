@@ -1,4 +1,9 @@
-import { isRecord, type GenerateRequest, type GenerationErrorCode } from '../lib/generation.js';
+import {
+  isRecord,
+  parseRetryAfter,
+  type GenerateRequest,
+  type GenerationErrorCode,
+} from '../lib/generation.js';
 import { buildMessages, type AvoidValues } from './prompt.js';
 
 export const GROQ_CHAT_COMPLETIONS_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -75,12 +80,6 @@ function readHeaderNumber(headers: Headers, name: string): number | undefined {
   const number = Number(value);
 
   return value !== null && value !== '' && Number.isFinite(number) ? number : undefined;
-}
-
-export function parseRetryAfter(value: string | null): number | undefined {
-  const seconds = Number(value);
-
-  return value !== null && Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : undefined;
 }
 
 // Parses Groq's reset durations such as "705ms", "7.66s" or "1m2.5s" into milliseconds.

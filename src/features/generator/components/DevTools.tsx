@@ -1,10 +1,14 @@
 import { FlaskConical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import type { GeneratorSource } from '../../../lib/generate';
 import type { MockOutcome } from '../../../lib/mock-generator';
+import { GeneratorSourceControl } from './GeneratorSourceControl';
 import { MockOutcomeControl } from './MockOutcomeControl';
 
 type DevToolsProps = {
+  source: GeneratorSource;
   outcome: MockOutcome;
+  onSourceChange: (source: GeneratorSource) => void;
   onOutcomeChange: (outcome: MockOutcome) => void;
 };
 
@@ -12,7 +16,7 @@ const PANEL_ID = 'dev-tools-panel';
 
 // Development-only corner widget, so the page layout stays exactly as it ships. GeneratorWorkspace
 // renders it only when import.meta.env.DEV.
-function DevTools({ outcome, onOutcomeChange }: DevToolsProps) {
+function DevTools({ source, outcome, onSourceChange, onOutcomeChange }: DevToolsProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -65,17 +69,29 @@ function DevTools({ outcome, onOutcomeChange }: DevToolsProps) {
           id={PANEL_ID}
           role="group"
         >
-          <MockOutcomeControl
-            outcome={outcome}
-            onChange={(next) => {
-              onOutcomeChange(next);
-              setOpen(false);
-              buttonRef.current?.focus();
-            }}
-          />
-          <p className="mt-2 text-xs leading-5 text-content-muted">
-            Development only. Forces the result of the next generation.
-          </p>
+          <GeneratorSourceControl source={source} onChange={onSourceChange} />
+          {source === 'mock' ? (
+            <>
+              <div className="mt-3">
+                <MockOutcomeControl
+                  outcome={outcome}
+                  onChange={(next) => {
+                    onOutcomeChange(next);
+                    setOpen(false);
+                    buttonRef.current?.focus();
+                  }}
+                />
+              </div>
+              <p className="mt-2 text-xs leading-5 text-content-muted">
+                Development only. Forces the result of the next generation.
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-xs leading-5 text-content-muted">
+              Development only. Calls /api/generate, which needs <code>npm run dev:vercel</code>{' '}
+              and uses real Groq tokens.
+            </p>
+          )}
         </div>
       )}
     </div>
