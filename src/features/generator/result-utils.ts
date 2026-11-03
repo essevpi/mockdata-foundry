@@ -1,4 +1,10 @@
-import type { GenerationError, GenerationState, PrimitiveValue } from '../../lib/generation';
+import type {
+  GenerateRequest,
+  GenerateSuccess,
+  GenerationError,
+  GenerationState,
+  PrimitiveValue,
+} from '../../lib/generation';
 
 export type CellDisplay = {
   kind: 'boolean' | 'empty' | 'null' | 'number' | 'text';
@@ -58,6 +64,14 @@ export function getNoResponseMessage(error: unknown): string {
   return error instanceof DOMException && error.name === 'TimeoutError'
     ? 'Generation took too long and was stopped. Please try again, or ask for fewer records.'
     : 'The server could not be reached. Check your connection and try again.';
+}
+
+// Columns follow the submitted field order, which previews and exports keep.
+export function createSuccessState(
+  request: GenerateRequest,
+  result: GenerateSuccess,
+): Extract<GenerationState, { status: 'success' }> {
+  return { status: 'success', result, columns: request.fields.map((field) => field.name) };
 }
 
 // The error state records when the error arrived, so a retry time is fixed from that moment.

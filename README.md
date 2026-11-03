@@ -11,6 +11,8 @@ Describe a dataset and a flat record shape, and an LLM generates realistic mock 
 - The browser checks the reply with the same per-record check before showing it. Error messages come from the app, never from the response.
 - The Groq API key stays on the server. No LLM SDK or schema library is used; validation is hand-written.
 
+The form and the last result are saved in your browser (`localStorage`), so a reload keeps them; Clear form empties the form. Nothing is stored on a server.
+
 CSV export: `null` is an empty field, strings are always quoted (so an empty string is `""`), numbers and booleans are unquoted.
 
 ## Local development

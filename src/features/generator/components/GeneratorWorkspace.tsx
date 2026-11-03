@@ -25,7 +25,15 @@ import {
   type TouchedSection,
 } from '../field-utils';
 import { readStoredGeneratorSource, storeGeneratorSource } from '../generator-source';
-import { createErrorState, getNoResponseMessage } from '../result-utils';
+import { createErrorState, createSuccessState, getNoResponseMessage } from '../result-utils';
+import {
+  createFormDraft,
+  readFormDraft,
+  readLastResult,
+  removeLastResult,
+  storeFormDraft,
+  storeLastResult,
+} from '../workspace-storage';
 import type { Preset } from '../presets';
 import { CommandBar } from './CommandBar';
 import { DatasetDetailsPanel } from './DatasetDetailsPanel';
@@ -43,10 +51,18 @@ type ClearedForm = {
 };
 
 function GeneratorWorkspace() {
-  const [description, setDescription] = useState('');
-  const [fields, setFields] = useState<FieldDraft[]>([]);
-  const [recordCount, setRecordCount] = useState(DEFAULT_RECORD_COUNT);
-  const [generation, setGeneration] = useState<GenerationState>({ status: 'idle' });
+  // The form and the last result come back from this browser's storage after a reload.
+  const [savedDraft] = useState(() => readFormDraft(getLocalStorage()));
+  const [description, setDescription] = useState(savedDraft?.description ?? '');
+  const [fields, setFields] = useState<FieldDraft[]>(
+    () => savedDraft?.fields.map(createFieldDraftFromDefinition) ?? [],
+  );
+  const [recordCount, setRecordCount] = useState(savedDraft?.recordCount ?? DEFAULT_RECORD_COUNT);
+  const [generation, setGeneration] = useState<GenerationState>(() => {
+    const lastResult = readLastResult(getLocalStorage());
+
+    return lastResult ? createSuccessState(lastResult.request, lastResult.result) : { status: 'idle' };
+  });
   // Development builds only (DevTools); production always uses the API.
   const [source, setSource] = useState<GeneratorSource>(() =>
     import.meta.env.DEV ? readStoredGeneratorSource(getLocalStorage()) : 'api',
@@ -69,6 +85,10 @@ function GeneratorWorkspace() {
   const paneRef = useRef<HTMLDivElement>(null);
   const problemCount =
     fieldProblems.length + getIssues('fields').length + getIssues('request').length;
+
+  useEffect(() => {
+    storeFormDraft(getLocalStorage(), createFormDraft(description, recordCount, fields));
+  }, [description, recordCount, fields]);
 
   // While the problem tray is showing the pane gets room below the list (instantly, so the field
   // being edited can scroll above the tray); the room collapses smoothly when the problems clear.
@@ -208,16 +228,16 @@ function GeneratorWorkspace() {
     try {
       const response = await generate(request, { source, mockOutcome });
 
-      setGeneration(
-        'error' in response
-          ? createErrorState(response.error)
-          : {
-              status: 'success',
-              result: response,
-              columns: request.fields.map((field) => field.name),
-            },
-      );
+      // Storage mirrors the results pane: a failure replaces the previous result there too.
+      if ('error' in response) {
+        removeLastResult(getLocalStorage());
+        setGeneration(createErrorState(response.error));
+      } else {
+        storeLastResult(getLocalStorage(), { request, result: response });
+        setGeneration(createSuccessState(request, response));
+      }
     } catch (error) {
+      removeLastResult(getLocalStorage());
       setGeneration(
         createErrorState({ code: 'UPSTREAM_ERROR', message: getNoResponseMessage(error) }),
       );

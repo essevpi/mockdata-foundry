@@ -2,9 +2,9 @@
 
 ## Product and UX
 
-Retain the focused MVP: describe a dataset, define a flat record shape, select 1–25 records, generate and validate data, preview it, and export JSON or CSV. Defer authentication, persistence, history, raw JSON Schema editing, nested fields, model selection, provider fallback, general automatic retries (generation makes at most one top-up call for missing records, see Architecture), and batch generation.
+Retain the focused MVP: describe a dataset, define a flat record shape, select 1–25 records, generate and validate data, preview it, and export JSON or CSV. Defer authentication, server-side persistence, history, raw JSON Schema editing, nested fields, model selection, provider fallback, general automatic retries (generation makes at most one top-up call for missing records, see Architecture), and batch generation.
 
-Use a two-pane workspace: the request form and field builder beside the results on large screens, stacked on smaller ones. Results can be viewed as a table or as the exported JSON. A blank form offers three example presets (Customers, Orders, Employees) under the description box; Clear form, with Undo, resets the request without discarding results; Ctrl/Cmd+Enter in the description generates. A field row contains:
+Use a two-pane workspace: the request form and field builder beside the results on large screens, stacked on smaller ones. Results can be viewed as a table or as the exported JSON. The form and the last successful result are kept in the browser (`localStorage`) so a reload loses nothing (milestone 5). A blank form offers three example presets (Customers, Orders, Employees) under the description box; Clear form, with Undo, resets the request without discarding results; Ctrl/Cmd+Enter in the description generates. A field row contains:
 
 - Unique name: 1–40 characters; starts with a letter, then letters, digits, or underscores (for example `camelCase` or `snake_case`)
 - Type: `string`, `number`, `integer`, or `boolean`
@@ -184,6 +184,15 @@ Status: ✅ done · ⏳ not started. Update markers as tasks complete.
    - Checks: lint, build, tests, smoke test, local Vercel-function test, and Vercel preview verification.
    - State at the start of the milestone: the folder is linked to the Vercel project `mockdata-foundry` (`.vercel/`, git-ignored); `.env` holds the development `GROQ_API_KEY` (Groq project "mockdata-foundry"); no production key exists yet; the GitHub repository is not connected to Vercel, so pushes do not deploy; nothing has been deployed.
    - The 33 `npm audit` findings come from the Vercel CLI's own dependencies (dev-only, never shipped); they were accepted in milestone 3. Re-check when upgrading the CLI (64.1.0 installed, 65.10.0 available in November 2026).
+
+5. **Local persistence** — ✅ done
+   - Decisions (2026-11-03): `localStorage`, kept until cleared; both the form and the last successful result, because with the 5-per-10-minutes firewall limit a reload would otherwise cost a generation to get results back. Nothing leaves the browser.
+   - `src/features/generator/workspace-storage.ts`: two versioned keys. `mockdata-form-draft` (description, record count text, fields without row ids) is written on every form change; `mockdata-last-result` (the request and its records) is written on success and removed on a failure, so storage mirrors the results pane. Clear form keeps results, as before.
+   - Restored data is untrusted. A draft may be incomplete, so it is shape-checked and cut to the input limits rather than validated as a request (malformed field rows dropped, an unusable record count replaced by the default). A stored result must pass `validateGenerateRequest` and `readRecords` (exact count, every record through `checkRecord`), like a live reply. Anything else restores as a blank form or idle results.
+   - Not stored: touched state (a restored form shows no errors until edited or submitted) and the Clear-form undo snapshot.
+   - Accepted limits: with several tabs, the last write wins; on a shared computer the draft stays until Clear form and the result until the next generation or clearing site data.
+   - Acceptance: a reload restores the form (with guidance rows open where guidance exists) and the last result with Table, Editor and downloads; a failed generation or Clear form behaves as before after a reload; corrupt or old stored data starts blank without errors.
+   - Checks: lint, build, tests (`workspace-storage.test.ts`), and a Playwright run of those scenarios with the mock.
 
 ## Post-MVP ideas
 

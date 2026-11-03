@@ -41,7 +41,7 @@ function parseJson(text: string): unknown {
   }
 }
 
-function readRecords(
+export function readRecords(
   body: unknown,
   request: GenerateRequest,
 ): Array<Record<string, PrimitiveValue>> | undefined {
