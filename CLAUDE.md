@@ -47,6 +47,7 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 - `npm test`: Vitest unit tests, single run
 - `npx vitest run <path>`: run a single test file
 - `npm run preview`: serve the built bundle
+- The Vercel CLI is a local dev dependency: run it as `npx vercel …`
 
 ## Checks and Tests
 
@@ -65,4 +66,5 @@ Use the semantic Tailwind tokens from `src/index.css` (`bg-app`, `text-content`,
 - Keep LLM provider credentials server-side; never expose secrets in browser code or commit them. Vite exposes `VITE_`-prefixed variables to the browser, so never give a server secret that prefix. Locally the key lives in `.env`; in deployments it is a Vercel Secret, with a separate Groq key per environment.
 - Before implementing a provider integration, check the current provider documentation for API behavior, authentication and supported models.
 - Treat LLM output as untrusted: validate provider responses against the contract in `PLAN.md` with hand-written checks before they reach the UI.
-- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The only approved addition still to come is the Vercel CLI (development); add it only when a task needs it. No other new dependencies.
+- Do not add an LLM SDK, database, or schema-validation library (see `PLAN.md`). The Vercel CLI (development, pinned) is the last approved addition; no other new dependencies.
+- Deploy only from the CLI (`npx vercel deploy`, `--prod` only when I ask). `.vercelignore` is an allowlist of what the build needs, because CLI uploads skip `.env.local` but not `.env`; extend it when the build needs a new root file.

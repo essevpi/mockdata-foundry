@@ -80,6 +80,12 @@ describe('readGenerateResponse', () => {
     expect(read(429, '')).toEqual(error('RATE_LIMITED'));
   });
 
+  it("maps the Vercel Firewall's rate-limit reply (measured November 2026) to RATE_LIMITED", () => {
+    const body = { error: { code: '429', message: 'Too Many Requests', id: 'fra1::abc' } };
+
+    expect(read(429, body)).toEqual(error('RATE_LIMITED'));
+  });
+
   it('maps an unknown error code by status', () => {
     expect(read(400, { error: { code: 'TEAPOT', message: 'x' } })).toEqual(error('INVALID_REQUEST'));
   });
